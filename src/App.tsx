@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Building2, Check, Droplets, Flame, Home, House, KeyRound, LockKeyhole, Mail, MonitorSmartphone, ShieldCheck, Sparkles, Wrench } from "lucide-react";
 
 type HomeType = "Casa" | "Departamento" | "PH" | "Barrio privado";
@@ -16,6 +16,7 @@ const quotes: Record<string, { area: string; monthly: number; structure: number 
   "160": { area: "121 a 160 m²", monthly: 37_990, structure: 200_000_000 },
   "200": { area: "más de 160 m²", monthly: 44_990, structure: 250_000_000 },
 };
+const API_URL = import.meta.env.VITE_API_URL || "https://api.seguroatiempo.com";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(value);
@@ -55,7 +56,7 @@ function HomeStep({ form, setForm, onContinue, error }: { form: FormState; setFo
   </section>;
 }
 
-function ContactStep({ form, setForm, onBack, onSubmit, error }: { form: FormState; setForm: React.Dispatch<React.SetStateAction<FormState>>; onBack: () => void; onSubmit: (event: FormEvent) => void; error: string }) {
+function ContactStep({ form, setForm, onBack, onSubmit, error, submitting }: { form: FormState; setForm: React.Dispatch<React.SetStateAction<FormState>>; onBack: () => void; onSubmit: (event: FormEvent) => void; error: string; submitting: boolean }) {
   return <section className="form-step" aria-labelledby="contact-title">
     <div className="section-heading"><p className="eyebrow">Ya casi terminamos</p><h1 id="contact-title">Dejanos tus datos</h1><p>Te mostraremos la cotización y guardaremos el detalle para vos.</p></div>
     <form onSubmit={onSubmit}><div className="contact-layout"><div className="contact-fields">
@@ -64,7 +65,7 @@ function ContactStep({ form, setForm, onBack, onSubmit, error }: { form: FormSta
       <div className="field"><label htmlFor="phone">Teléfono</label><input id="phone" type="tel" autoComplete="tel" placeholder="Ej: +54 9 11 1234 5678" value={form.phone} onChange={e => setForm(v => ({ ...v, phone: e.target.value }))} /></div>
     </div><aside className="delivery-note"><span className="delivery-icon"><Mail size={29} /></span><p>Te enviaremos el <strong>detalle de tu cotización</strong> y quedará guardada para vos.</p></aside></div>
     {error && <p className="form-error" role="alert">{error}</p>}
-    <div className="form-actions"><button className="button button-secondary" type="button" onClick={onBack}><ArrowLeft size={18} /> Volver</button><button className="button button-primary" type="submit">Ver mi cotización <ArrowRight size={19} /></button></div></form>
+    <div className="form-actions"><button className="button button-secondary" type="button" onClick={onBack} disabled={submitting}><ArrowLeft size={18} /> Volver</button><button className="button button-primary" type="submit" disabled={submitting}>{submitting ? "Guardando..." : "Ver mi cotización"} {!submitting && <ArrowRight size={19} />}</button></div></form>
   </section>;
 }
 
@@ -81,17 +82,45 @@ function QuoteStep({ form, onBack }: { form: FormState; onBack: () => void }) {
     <div className="quote-welcome"><span className="success-icon"><Check size={23} strokeWidth={3} /></span><div><h1 id="quote-title">¡Listo, {firstName}!</h1><p>Tenemos una cobertura pensada para tu hogar.</p></div></div>
     <div className="quote-layout"><div><div className="home-summary">Cobertura sugerida para <strong>{form.homeType} de {quote.area}</strong></div><div className="price-card"><span>Tu seguro está respaldado por</span><div className="insurer-logo"><img src="/assets/allianz.png" alt="Allianz" /></div><small>Tu seguro de hogar</small><div className="price">{formatCurrency(quote.monthly)} <span>/mes</span></div><strong>12 CUOTAS FIJAS</strong><span>Póliza anual</span><em>Precio demostrativo · sin conexión al tarifario</em></div><button className="button button-primary full-button" type="button" disabled>Quiero contratar <ArrowRight size={19} /></button></div>
       <div className="coverage-card"><h2>Tu cobertura</h2>{coverage.map(({ icon: Icon, label, value }, index) => <div className="coverage-row" key={label}><span><Icon size={19} /> {label}</span><strong className={index === coverage.length - 1 ? "included" : ""}>{value}</strong></div>)}</div>
-    </div><div className="quote-footer"><button className="text-button" type="button" onClick={onBack}><ArrowLeft size={17} /> Corregir mis datos</button><span>Esta versión todavía no envía datos ni activa automatizaciones.</span></div>
+    </div><div className="quote-footer"><button className="text-button" type="button" onClick={onBack}><ArrowLeft size={17} /> Corregir mis datos</button><span>Guardamos tu solicitud para que un asesor pueda ayudarte.</span></div>
   </section>;
 }
 
 function HomeQuotePage() {
-  const [step, setStep] = useState(1), [form, setForm] = useState(initialForm), [error, setError] = useState("");
+  const [step, setStep] = useState(1), [form, setForm] = useState(initialForm), [error, setError] = useState(""), [submitting, setSubmitting] = useState(false);
+  const submissionId = useRef(crypto.randomUUID());
   function continueToContact() { if (!/^\d{4}$/.test(form.postalCode) || !form.floor || !form.area) { setError("Completá el código postal, el piso y los metros cuadrados."); return; } setError(""); setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }
-  function submitContact(event: FormEvent) { event.preventDefault(); if (form.name.trim().length < 3 || !/^\S+@\S+\.\S+$/.test(form.email) || form.phone.replace(/\D/g, "").length < 8) { setError("Ingresá tu nombre, un email válido y un teléfono de contacto."); return; } setError(""); setStep(3); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  async function submitContact(event: FormEvent) {
+    event.preventDefault();
+    if (form.name.trim().length < 3 || !/^\S+@\S+\.\S+$/.test(form.email) || form.phone.replace(/\D/g, "").length < 8) { setError("Ingresá tu nombre, un email válido y un teléfono de contacto."); return; }
+    const quote = quotes[form.area];
+    if (!quote) { setError("Seleccioná los metros cuadrados de tu hogar."); return; }
+    setError(""); setSubmitting(true);
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const response = await fetch(`${API_URL}/leads/home`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          submissionId: submissionId.current, name: form.name, email: form.email, phone: form.phone,
+          postalCode: form.postalCode, homeType: form.homeType, floor: form.floor, areaCode: form.area,
+          origin: {
+            pageUrl: window.location.href, referrer: document.referrer || undefined,
+            utmSource: params.get("utm_source") || undefined, utmMedium: params.get("utm_medium") || undefined,
+            utmCampaign: params.get("utm_campaign") || undefined, utmContent: params.get("utm_content") || undefined,
+            utmTerm: params.get("utm_term") || undefined,
+          },
+        }),
+      });
+      if (!response.ok) throw new Error("No pudimos guardar la solicitud");
+      setStep(3); window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch {
+      setError("No pudimos guardar tu solicitud. Por favor, intentá nuevamente.");
+    } finally { setSubmitting(false); }
+  }
   return <div className="page-shell"><SiteHeader /><main className="quote-main"><div className="quote-card"><Stepper current={step} />
     {step === 1 && <HomeStep form={form} setForm={setForm} onContinue={continueToContact} error={error} />}
-    {step === 2 && <ContactStep form={form} setForm={setForm} onBack={() => { setError(""); setStep(1); }} onSubmit={submitContact} error={error} />}
+    {step === 2 && <ContactStep form={form} setForm={setForm} onBack={() => { setError(""); setStep(1); }} onSubmit={submitContact} error={error} submitting={submitting} />}
     {step === 3 && <QuoteStep form={form} onBack={() => setStep(2)} />}
   </div></main><footer className="site-footer"><span>Seguro a Tiempo</span><span>Asesoramiento real para proteger lo que importa.</span></footer></div>;
 }
