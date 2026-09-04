@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Building2, Check, Droplets, Flame, Home, House, 
 type HomeType = "Casa" | "Departamento" | "PH" | "Barrio privado";
 type FormState = { postalCode: string; homeType: HomeType; floor: string; squareMeters: string; name: string; email: string; phone: string };
 type HomeQuote = { requestedSquareMeters: number; quotedSquareMeters: number; areaLabel: string; monthlyPrice: number; structureCoverage: number; contentsCoverage: number; appliancesCoverage: number; glassCoverage: number; theftCoverage: number; waterDamageCoverage: number; assistanceIncluded: boolean; currency: "ARS" };
+type ContractState = { firstName: string; lastName: string; dni: string; dateOfBirth: string; address: string; floor: string; apartment: string; postalCode: string; email: string; phone: string };
 
 const initialForm: FormState = { postalCode: "", homeType: "Casa", floor: "", squareMeters: "", name: "", email: "", phone: "" };
 const homeTypes = [
@@ -70,7 +71,7 @@ function ContactStep({ form, setForm, onBack, onSubmit, error, submitting }: { f
   </section>;
 }
 
-function QuoteStep({ form, quote, onBack }: { form: FormState; quote: HomeQuote; onBack: () => void }) {
+function QuoteStep({ form, quote, onBack, onContract }: { form: FormState; quote: HomeQuote; onBack: () => void; onContract: () => void }) {
   const firstName = form.name.trim().split(/\s+/)[0] || "";
   const coverage = [
     { icon: Flame, label: "Incendio de estructura", value: formatCurrency(quote.structureCoverage) }, { icon: Home, label: "Incendio del contenido", value: formatCurrency(quote.contentsCoverage) },
@@ -80,16 +81,46 @@ function QuoteStep({ form, quote, onBack }: { form: FormState; quote: HomeQuote;
   ];
   return <section className="form-step quote-step" aria-labelledby="quote-title">
     <div className="quote-welcome"><span className="success-icon"><Check size={23} strokeWidth={3} /></span><div><h1 id="quote-title">¡Listo, {firstName}!</h1><p>Tenemos una cobertura pensada para tu hogar.</p></div></div>
-    <div className="quote-layout"><div><div className="home-summary">Cobertura sugerida para <strong>{form.homeType} de {quote.quotedSquareMeters} m²</strong></div><div className="price-card"><span>Tu seguro está respaldado por</span><div className="insurer-logo"><img src="/assets/allianz.png" alt="Allianz" /></div><small>Tu seguro de hogar</small><div className="price">{formatCurrency(quote.monthlyPrice)} <span>/mes</span></div><strong>12 CUOTAS FIJAS</strong><span>Póliza anual</span><em>Precio consultado en el tarifario vigente</em></div><button className="button button-primary full-button" type="button" disabled>Quiero contratar <ArrowRight size={19} /></button></div>
+    <div className="quote-layout"><div><div className="home-summary">Cobertura sugerida para <strong>{form.homeType} de {quote.quotedSquareMeters} m²</strong></div><div className="price-card"><span>Tu seguro está respaldado por</span><div className="insurer-logo"><img src="/assets/allianz.png" alt="Allianz" /></div><small>Tu seguro de hogar</small><div className="price">{formatCurrency(quote.monthlyPrice)} <span>/mes</span></div><strong>12 CUOTAS FIJAS</strong><span>Póliza anual</span><em>Precio consultado en el tarifario vigente</em></div><button className="button button-primary full-button" type="button" onClick={onContract}>Quiero contratar <ArrowRight size={19} /></button></div>
       <div className="coverage-card"><h2>Tu cobertura</h2>{coverage.map(({ icon: Icon, label, value }, index) => <div className="coverage-row" key={label}><span><Icon size={19} /> {label}</span><strong className={index === coverage.length - 1 ? "included" : ""}>{value}</strong></div>)}</div>
     </div><div className="quote-footer"><button className="text-button" type="button" onClick={onBack}><ArrowLeft size={17} /> Corregir mis datos</button><span>Guardamos tu solicitud para que un asesor pueda ayudarte.</span></div>
   </section>;
+}
+
+function ContractStep({ data, setData, onBack, onSubmit, error, submitting }: { data: ContractState; setData: React.Dispatch<React.SetStateAction<ContractState>>; onBack: () => void; onSubmit: (event: FormEvent) => void; error: string; submitting: boolean }) {
+  const field = (key: keyof ContractState) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setData((current) => ({ ...current, [key]: event.target.value }));
+  return <section className="form-step contract-step" aria-labelledby="contract-title">
+    <div className="section-heading"><p className="eyebrow">Solicitud de contratación</p><h1 id="contract-title">Completá tus datos</h1><p>Usaremos esta información para preparar la emisión de tu seguro.</p></div>
+    <div className="contract-security"><ShieldCheck size={20} /><span>Tus datos están protegidos. Todavía no te pediremos ningún medio de pago.</span></div>
+    <form onSubmit={onSubmit}>
+      <div className="contract-fields">
+        <div className="field"><label htmlFor="contract-first-name">Nombre</label><input id="contract-first-name" autoComplete="given-name" value={data.firstName} onChange={field("firstName")} /></div>
+        <div className="field"><label htmlFor="contract-last-name">Apellido</label><input id="contract-last-name" autoComplete="family-name" value={data.lastName} onChange={field("lastName")} /></div>
+        <div className="field"><label htmlFor="contract-dni">DNI</label><input id="contract-dni" inputMode="numeric" maxLength={10} placeholder="Ej: 30123456" value={data.dni} onChange={event => setData(current => ({ ...current, dni: event.target.value.replace(/\D/g, "") }))} /></div>
+        <div className="field"><label htmlFor="contract-birth-date">Fecha de nacimiento</label><input id="contract-birth-date" type="date" autoComplete="bday" value={data.dateOfBirth} onChange={field("dateOfBirth")} /></div>
+        <div className="field contract-address"><label htmlFor="contract-address">Domicilio</label><input id="contract-address" autoComplete="street-address" placeholder="Calle y número" value={data.address} onChange={field("address")} /></div>
+        <div className="field"><label htmlFor="contract-floor">Piso</label><select id="contract-floor" value={data.floor} onChange={field("floor")}><option value="">Seleccioná el piso</option><option>Planta baja</option><option>Primer piso</option><option>Segundo piso o superior</option><option>No corresponde</option></select></div>
+        <div className="field"><label htmlFor="contract-apartment">Departamento <span className="optional">(opcional)</span></label><input id="contract-apartment" placeholder="Ej: B" value={data.apartment} onChange={field("apartment")} /></div>
+        <div className="field"><label htmlFor="contract-postal-code">Código postal</label><input id="contract-postal-code" inputMode="numeric" autoComplete="postal-code" maxLength={8} value={data.postalCode} onChange={field("postalCode")} /></div>
+        <div className="field"><label htmlFor="contract-email">Email</label><input id="contract-email" type="email" autoComplete="email" value={data.email} onChange={field("email")} /></div>
+        <div className="field"><label htmlFor="contract-phone">Celular</label><input id="contract-phone" type="tel" autoComplete="tel" value={data.phone} onChange={field("phone")} /></div>
+      </div>
+      {error && <p className="form-error" role="alert">{error}</p>}
+      <div className="form-actions"><button className="button button-secondary" type="button" onClick={onBack} disabled={submitting}><ArrowLeft size={18} /> Volver</button><button className="button button-primary" type="submit" disabled={submitting}>{submitting ? "Enviando..." : "Enviar mis datos para contratar"} {!submitting && <ArrowRight size={19} />}</button></div>
+    </form>
+  </section>;
+}
+
+function ContractSuccess({ firstName }: { firstName: string }) {
+  return <section className="form-step contract-success"><span className="success-icon large"><Check size={36} strokeWidth={3} /></span><h1>¡Recibimos tus datos, {firstName}!</h1><p>Un asesor va a contactarte para finalizar la emisión de tu seguro.</p><div className="contract-security"><ShieldCheck size={21} /><span>Tu solicitud quedó guardada y vinculada con la cotización.</span></div></section>;
 }
 
 function HomeQuotePage() {
   const [step, setStep] = useState(1), [form, setForm] = useState(initialForm), [error, setError] = useState(""), [submitting, setSubmitting] = useState(false);
   const [areaOptions, setAreaOptions] = useState<number[]>([30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,110,120,130,140,150,160,170,180,190,200]);
   const [quote, setQuote] = useState<HomeQuote | null>(null);
+  const [leadId, setLeadId] = useState("");
+  const [contract, setContract] = useState<ContractState>({ firstName: "", lastName: "", dni: "", dateOfBirth: "", address: "", floor: "", apartment: "", postalCode: "", email: "", phone: "" });
   const submissionId = useRef(crypto.randomUUID());
   useEffect(() => { void fetch(`${API_URL}/leads/home/quote?squareMeters=30`).then(response => response.ok ? response.json() : Promise.reject()).then(data => setAreaOptions(data.options)).catch(() => undefined); }, []);
   function continueToContact() { const area = Number(form.squareMeters); if (!/^\d{4}$/.test(form.postalCode) || !form.floor || !Number.isInteger(area) || area < 30 || area > 200) { setError("Completá el código postal, el piso y una superficie entre 30 y 200 m²."); return; } setError(""); setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }
@@ -117,15 +148,34 @@ function HomeQuotePage() {
       if (!response.ok) throw new Error("No pudimos guardar la solicitud");
       const data = await response.json();
       setQuote(data.quote);
+      setLeadId(data.leadId);
       setStep(3); window.scrollTo({ top: 0, behavior: "smooth" });
     } catch {
       setError("No pudimos guardar tu solicitud. Por favor, intentá nuevamente.");
     } finally { setSubmitting(false); }
   }
-  return <div className="page-shell"><SiteHeader /><main className="quote-main"><div className="quote-card"><Stepper current={step} />
+  function startContract() {
+    const [firstName = "", ...lastNameParts] = form.name.trim().split(/\s+/);
+    setContract({ firstName, lastName: lastNameParts.join(" "), dni: "", dateOfBirth: "", address: "", floor: form.floor, apartment: "", postalCode: form.postalCode, email: form.email, phone: form.phone });
+    setError(""); setStep(4); window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  async function submitContract(event: FormEvent) {
+    event.preventDefault();
+    if (!contract.firstName || !contract.lastName || contract.dni.length < 6 || !contract.dateOfBirth || contract.address.length < 3 || !contract.floor || contract.postalCode.length < 4 || !/^\S+@\S+\.\S+$/.test(contract.email) || contract.phone.replace(/\D/g, "").length < 8) { setError("Completá todos los datos obligatorios para continuar."); return; }
+    setError(""); setSubmitting(true);
+    try {
+      const response = await fetch(`${API_URL}/leads/home/${leadId}/contract`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ submissionId: submissionId.current, ...contract }) });
+      if (!response.ok) throw new Error("No pudimos actualizar la solicitud");
+      setStep(5); window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch { setError("No pudimos enviar tus datos. Por favor, intentá nuevamente."); }
+    finally { setSubmitting(false); }
+  }
+  return <div className="page-shell"><SiteHeader /><main className="quote-main"><div className="quote-card">{step <= 3 && <Stepper current={step} />}
     {step === 1 && <HomeStep form={form} setForm={setForm} onContinue={continueToContact} error={error} areaOptions={areaOptions} />}
     {step === 2 && <ContactStep form={form} setForm={setForm} onBack={() => { setError(""); setStep(1); }} onSubmit={submitContact} error={error} submitting={submitting} />}
-    {step === 3 && quote && <QuoteStep form={form} quote={quote} onBack={() => setStep(2)} />}
+    {step === 3 && quote && <QuoteStep form={form} quote={quote} onBack={() => setStep(2)} onContract={startContract} />}
+    {step === 4 && <ContractStep data={contract} setData={setContract} onBack={() => setStep(3)} onSubmit={submitContract} error={error} submitting={submitting} />}
+    {step === 5 && <ContractSuccess firstName={contract.firstName} />}
   </div></main><footer className="site-footer"><span>Seguro a Tiempo</span><span>Asesoramiento real para proteger lo que importa.</span></footer></div>;
 }
 
