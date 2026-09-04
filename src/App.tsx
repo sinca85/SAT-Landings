@@ -46,12 +46,12 @@ function SiteHeader() {
 
 function HomeStep({ form, setForm, onContinue, error, areaOptions, showValidation }: { form: FormState; setForm: React.Dispatch<React.SetStateAction<FormState>>; onContinue: () => void; error: string; areaOptions: number[]; showValidation: boolean }) {
   const currentArea = Number(form.squareMeters) || areaOptions[0] || 30;
-  const postalInvalid = showValidation && !/^\d{4}$/.test(form.postalCode), floorInvalid = showValidation && !form.floor, areaInvalid = showValidation && (!Number.isInteger(Number(form.squareMeters)) || Number(form.squareMeters) < 30 || Number(form.squareMeters) > 200);
+  const currentIndex = areaOptions.indexOf(currentArea);
+  const postalInvalid = showValidation && !/^\d{4}$/.test(form.postalCode), floorInvalid = showValidation && !form.floor, areaInvalid = showValidation && !areaOptions.includes(Number(form.squareMeters));
   const moveArea = (direction: -1 | 1) => {
-    const nextIndex = direction > 0
-      ? areaOptions.findIndex((value) => value > currentArea)
-      : areaOptions.filter((value) => value < currentArea).length - 1;
-    if (nextIndex >= 0) setForm((value) => ({ ...value, squareMeters: String(areaOptions[nextIndex]) }));
+    const nextIndex = currentIndex + direction;
+    const nextValue = areaOptions[nextIndex];
+    if (nextValue !== undefined) setForm((value) => ({ ...value, squareMeters: String(nextValue) }));
   };
   return <section className="form-step" aria-labelledby="home-title">
     <div className="section-heading"><p className="eyebrow">Cotizá online en minutos</p><h1 id="home-title">Contanos sobre tu hogar</h1><p>Así podemos encontrar una cobertura pensada para vos.</p></div>
@@ -61,7 +61,7 @@ function HomeStep({ form, setForm, onContinue, error, areaOptions, showValidatio
         {homeTypes.map(({ value, icon: Icon }) => <button className={`home-type ${form.homeType === value ? "is-selected" : ""}`} type="button" aria-pressed={form.homeType === value} onClick={() => setForm(v => ({ ...v, homeType: value }))} key={value}><Icon size={25} /><span>{value}</span></button>)}
       </div></fieldset>
       <div className={`field ${floorInvalid ? "field-invalid" : ""}`}><label htmlFor="floor">Piso</label><select id="floor" aria-invalid={floorInvalid} value={form.floor} onChange={e => setForm(v => ({ ...v, floor: e.target.value }))}><option value="">Seleccioná el piso</option><option>Planta baja</option><option>Primer piso</option><option>Segundo piso o superior</option><option>No corresponde</option></select>{floorInvalid && <span className="field-message">Seleccioná una opción.</span>}</div>
-      <div className={`field ${areaInvalid ? "field-invalid" : ""}`}><label htmlFor="area">Metros cuadrados cubiertos (aprox.)</label><div className="area-input"><button type="button" aria-label="Reducir metros cuadrados" onClick={() => moveArea(-1)} disabled={currentArea <= (areaOptions[0] || 30)}>−</button><div><input id="area" aria-invalid={areaInvalid} type="number" inputMode="numeric" min={30} max={200} placeholder="Ej: 70" value={form.squareMeters} onChange={e => setForm(v => ({ ...v, squareMeters: e.target.value.replace(/\D/g, "") }))} /><span>m²</span></div><button type="button" aria-label="Aumentar metros cuadrados" onClick={() => moveArea(1)} disabled={currentArea >= (areaOptions.at(-1) || 200)}>+</button></div>{areaInvalid && <span className="field-message">Ingresá una superficie entre 30 y 200 m².</span>}<small>Si queda entre dos tramos, cotizamos el inmediato superior.</small></div>
+      <div className={`field ${areaInvalid ? "field-invalid" : ""}`}><label htmlFor="area">Metros cuadrados cubiertos (aprox.)</label><div className="area-input"><button type="button" aria-label="Reducir metros cuadrados" onClick={() => moveArea(-1)} disabled={currentIndex <= 0}>−</button><div><input id="area" aria-invalid={areaInvalid} type="text" readOnly value={form.squareMeters || "Cargando..."} /><span>{form.squareMeters ? "m²" : ""}</span></div><button type="button" aria-label="Aumentar metros cuadrados" onClick={() => moveArea(1)} disabled={currentIndex < 0 || currentIndex >= areaOptions.length - 1}>+</button></div>{areaInvalid && <span className="field-message">No pudimos cargar las superficies disponibles.</span>}<small>Las opciones corresponden exactamente a los tramos del tarifario vigente.</small></div>
     </div>
     {error && <p className="form-error" role="alert">{error}</p>}
     <div className="form-actions"><span className="trust-note"><ShieldCheck size={17} /> Tu información está protegida</span><button className="button button-primary" type="button" onClick={onContinue}>Continuar <ArrowRight size={19} /></button></div>
@@ -131,15 +131,15 @@ function ContractSuccess({ firstName }: { firstName: string }) {
 
 function HomeQuotePage() {
   const [step, setStep] = useState(1), [form, setForm] = useState(initialForm), [error, setError] = useState(""), [submitting, setSubmitting] = useState(false);
-  const [areaOptions, setAreaOptions] = useState<number[]>([30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,110,120,130,140,150,160,170,180,190,200]);
+  const [areaOptions, setAreaOptions] = useState<number[]>([]);
   const [quote, setQuote] = useState<HomeQuote | null>(null);
   const [leadId, setLeadId] = useState("");
   const [contract, setContract] = useState<ContractState>({ firstName: "", lastName: "", dni: "", dateOfBirth: "", address: "", floor: "", apartment: "", postalCode: "", email: "", phone: "" });
   const [validationAttempted, setValidationAttempted] = useState<Record<number, boolean>>({});
   const submissionId = useRef(crypto.randomUUID());
   const revealErrors = (validationStep: number) => { setValidationAttempted(current => ({ ...current, [validationStep]: true })); window.setTimeout(() => document.querySelector(".field-invalid")?.scrollIntoView({ behavior: "smooth", block: "center" }), 0); };
-  useEffect(() => { void fetch(`${API_URL}/leads/home/quote?squareMeters=30`).then(response => response.ok ? response.json() : Promise.reject()).then(data => setAreaOptions(data.options)).catch(() => undefined); }, []);
-  function continueToContact() { const area = Number(form.squareMeters); if (!/^\d{4}$/.test(form.postalCode) || !form.floor || !Number.isInteger(area) || area < 30 || area > 200) { revealErrors(1); setError("Completá los campos marcados para continuar."); return; } setError(""); setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  useEffect(() => { void fetch(`${API_URL}/leads/home/options`).then(response => response.ok ? response.json() : Promise.reject()).then(data => { const options = Array.isArray(data.options) ? data.options.filter((value: unknown) => typeof value === "number") : []; if (!options.length) throw new Error(); setAreaOptions(options); setForm(current => ({ ...current, squareMeters: String(options[0]) })); }).catch(() => setError("No pudimos cargar el tarifario. Por favor, intentá nuevamente.")); }, []);
+  function continueToContact() { const area = Number(form.squareMeters); if (!/^\d{4}$/.test(form.postalCode) || !form.floor || !areaOptions.includes(area)) { revealErrors(1); setError("Completá los campos marcados para continuar."); return; } setError(""); setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }
   async function submitContact(event: FormEvent) {
     event.preventDefault();
     if (form.name.trim().length < 3 || !/^\S+@\S+\.\S+$/.test(form.email) || !validArgentinePhone(form.phone)) { revealErrors(2); setError("Completá los campos marcados para continuar."); return; }
