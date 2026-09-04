@@ -35,8 +35,9 @@ function SiteHeader() {
   </div></header>;
 }
 
-function HomeStep({ form, setForm, onContinue, error, areaOptions }: { form: FormState; setForm: React.Dispatch<React.SetStateAction<FormState>>; onContinue: () => void; error: string; areaOptions: number[] }) {
+function HomeStep({ form, setForm, onContinue, error, areaOptions, showValidation }: { form: FormState; setForm: React.Dispatch<React.SetStateAction<FormState>>; onContinue: () => void; error: string; areaOptions: number[]; showValidation: boolean }) {
   const currentArea = Number(form.squareMeters) || areaOptions[0] || 30;
+  const postalInvalid = showValidation && !/^\d{4}$/.test(form.postalCode), floorInvalid = showValidation && !form.floor, areaInvalid = showValidation && (!Number.isInteger(Number(form.squareMeters)) || Number(form.squareMeters) < 30 || Number(form.squareMeters) > 200);
   const moveArea = (direction: -1 | 1) => {
     const nextIndex = direction > 0
       ? areaOptions.findIndex((value) => value > currentArea)
@@ -46,25 +47,26 @@ function HomeStep({ form, setForm, onContinue, error, areaOptions }: { form: For
   return <section className="form-step" aria-labelledby="home-title">
     <div className="section-heading"><p className="eyebrow">Cotizá online en minutos</p><h1 id="home-title">Contanos sobre tu hogar</h1><p>Así podemos encontrar una cobertura pensada para vos.</p></div>
     <div className="fields-grid">
-      <div className="field"><label htmlFor="postal-code">Código postal</label><input id="postal-code" inputMode="numeric" maxLength={4} placeholder="Ej: 1425" value={form.postalCode} onChange={e => setForm(v => ({ ...v, postalCode: e.target.value.replace(/\D/g, "") }))} /></div>
+      <div className={`field ${postalInvalid ? "field-invalid" : ""}`}><label htmlFor="postal-code">Código postal</label><input id="postal-code" aria-invalid={postalInvalid} inputMode="numeric" maxLength={4} placeholder="Ej: 1425" value={form.postalCode} onChange={e => setForm(v => ({ ...v, postalCode: e.target.value.replace(/\D/g, "") }))} />{postalInvalid && <span className="field-message">Ingresá un código postal de 4 números.</span>}</div>
       <fieldset className="field home-type-field"><legend>Tipo de vivienda</legend><div className="home-types">
         {homeTypes.map(({ value, icon: Icon }) => <button className={`home-type ${form.homeType === value ? "is-selected" : ""}`} type="button" aria-pressed={form.homeType === value} onClick={() => setForm(v => ({ ...v, homeType: value }))} key={value}><Icon size={25} /><span>{value}</span></button>)}
       </div></fieldset>
-      <div className="field"><label htmlFor="floor">Piso</label><select id="floor" value={form.floor} onChange={e => setForm(v => ({ ...v, floor: e.target.value }))}><option value="">Seleccioná el piso</option><option>Planta baja</option><option>Primer piso</option><option>Segundo piso o superior</option><option>No corresponde</option></select></div>
-      <div className="field"><label htmlFor="area">Metros cuadrados cubiertos (aprox.)</label><div className="area-input"><button type="button" aria-label="Reducir metros cuadrados" onClick={() => moveArea(-1)} disabled={currentArea <= (areaOptions[0] || 30)}>−</button><div><input id="area" type="number" inputMode="numeric" min={30} max={200} placeholder="Ej: 70" value={form.squareMeters} onChange={e => setForm(v => ({ ...v, squareMeters: e.target.value.replace(/\D/g, "") }))} /><span>m²</span></div><button type="button" aria-label="Aumentar metros cuadrados" onClick={() => moveArea(1)} disabled={currentArea >= (areaOptions.at(-1) || 200)}>+</button></div><small>Ingresá una superficie entre 30 y 200 m². Si queda entre dos tramos, cotizamos el inmediato superior.</small></div>
+      <div className={`field ${floorInvalid ? "field-invalid" : ""}`}><label htmlFor="floor">Piso</label><select id="floor" aria-invalid={floorInvalid} value={form.floor} onChange={e => setForm(v => ({ ...v, floor: e.target.value }))}><option value="">Seleccioná el piso</option><option>Planta baja</option><option>Primer piso</option><option>Segundo piso o superior</option><option>No corresponde</option></select>{floorInvalid && <span className="field-message">Seleccioná una opción.</span>}</div>
+      <div className={`field ${areaInvalid ? "field-invalid" : ""}`}><label htmlFor="area">Metros cuadrados cubiertos (aprox.)</label><div className="area-input"><button type="button" aria-label="Reducir metros cuadrados" onClick={() => moveArea(-1)} disabled={currentArea <= (areaOptions[0] || 30)}>−</button><div><input id="area" aria-invalid={areaInvalid} type="number" inputMode="numeric" min={30} max={200} placeholder="Ej: 70" value={form.squareMeters} onChange={e => setForm(v => ({ ...v, squareMeters: e.target.value.replace(/\D/g, "") }))} /><span>m²</span></div><button type="button" aria-label="Aumentar metros cuadrados" onClick={() => moveArea(1)} disabled={currentArea >= (areaOptions.at(-1) || 200)}>+</button></div>{areaInvalid && <span className="field-message">Ingresá una superficie entre 30 y 200 m².</span>}<small>Si queda entre dos tramos, cotizamos el inmediato superior.</small></div>
     </div>
     {error && <p className="form-error" role="alert">{error}</p>}
     <div className="form-actions"><span className="trust-note"><ShieldCheck size={17} /> Tu información está protegida</span><button className="button button-primary" type="button" onClick={onContinue}>Continuar <ArrowRight size={19} /></button></div>
   </section>;
 }
 
-function ContactStep({ form, setForm, onBack, onSubmit, error, submitting }: { form: FormState; setForm: React.Dispatch<React.SetStateAction<FormState>>; onBack: () => void; onSubmit: (event: FormEvent) => void; error: string; submitting: boolean }) {
+function ContactStep({ form, setForm, onBack, onSubmit, error, submitting, showValidation }: { form: FormState; setForm: React.Dispatch<React.SetStateAction<FormState>>; onBack: () => void; onSubmit: (event: FormEvent) => void; error: string; submitting: boolean; showValidation: boolean }) {
+  const nameInvalid = showValidation && form.name.trim().length < 3, emailInvalid = showValidation && !/^\S+@\S+\.\S+$/.test(form.email), phoneInvalid = showValidation && form.phone.replace(/\D/g, "").length < 8;
   return <section className="form-step" aria-labelledby="contact-title">
     <div className="section-heading"><p className="eyebrow">Ya casi terminamos</p><h1 id="contact-title">Dejanos tus datos</h1><p>Te mostraremos la cotización y guardaremos el detalle para vos.</p></div>
     <form onSubmit={onSubmit}><div className="contact-layout"><div className="contact-fields">
-      <div className="field"><label htmlFor="name">Nombre y apellido</label><input id="name" autoComplete="name" placeholder="Ej: Juan Pérez" value={form.name} onChange={e => setForm(v => ({ ...v, name: e.target.value }))} /></div>
-      <div className="field"><label htmlFor="email">Email</label><input id="email" type="email" autoComplete="email" placeholder="Ej: juanperez@email.com" value={form.email} onChange={e => setForm(v => ({ ...v, email: e.target.value }))} /></div>
-      <div className="field"><label htmlFor="phone">Teléfono</label><input id="phone" type="tel" autoComplete="tel" placeholder="Ej: +54 9 11 1234 5678" value={form.phone} onChange={e => setForm(v => ({ ...v, phone: e.target.value }))} /></div>
+      <div className={`field ${nameInvalid ? "field-invalid" : ""}`}><label htmlFor="name">Nombre y apellido</label><input id="name" aria-invalid={nameInvalid} autoComplete="name" placeholder="Ej: Juan Pérez" value={form.name} onChange={e => setForm(v => ({ ...v, name: e.target.value }))} />{nameInvalid && <span className="field-message">Ingresá tu nombre y apellido.</span>}</div>
+      <div className={`field ${emailInvalid ? "field-invalid" : ""}`}><label htmlFor="email">Email</label><input id="email" aria-invalid={emailInvalid} type="email" autoComplete="email" placeholder="Ej: juanperez@email.com" value={form.email} onChange={e => setForm(v => ({ ...v, email: e.target.value }))} />{emailInvalid && <span className="field-message">Ingresá un email válido.</span>}</div>
+      <div className={`field ${phoneInvalid ? "field-invalid" : ""}`}><label htmlFor="phone">Teléfono</label><input id="phone" aria-invalid={phoneInvalid} type="tel" autoComplete="tel" placeholder="Ej: +54 9 11 1234 5678" value={form.phone} onChange={e => setForm(v => ({ ...v, phone: e.target.value }))} />{phoneInvalid && <span className="field-message">Ingresá un teléfono válido.</span>}</div>
     </div><aside className="delivery-note"><span className="delivery-icon"><Mail size={29} /></span><p>Te enviaremos el <strong>detalle de tu cotización</strong> y quedará guardada para vos.</p></aside></div>
     {error && <p className="form-error" role="alert">{error}</p>}
     <div className="form-actions"><button className="button button-secondary" type="button" onClick={onBack} disabled={submitting}><ArrowLeft size={18} /> Volver</button><button className="button button-primary" type="submit" disabled={submitting}>{submitting ? "Guardando..." : "Ver mi cotización"} {!submitting && <ArrowRight size={19} />}</button></div></form>
@@ -87,23 +89,26 @@ function QuoteStep({ form, quote, onBack, onContract }: { form: FormState; quote
   </section>;
 }
 
-function ContractStep({ data, setData, onBack, onSubmit, error, submitting }: { data: ContractState; setData: React.Dispatch<React.SetStateAction<ContractState>>; onBack: () => void; onSubmit: (event: FormEvent) => void; error: string; submitting: boolean }) {
+function ContractStep({ data, setData, onBack, onSubmit, error, submitting, showValidation }: { data: ContractState; setData: React.Dispatch<React.SetStateAction<ContractState>>; onBack: () => void; onSubmit: (event: FormEvent) => void; error: string; submitting: boolean; showValidation: boolean }) {
   const field = (key: keyof ContractState) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setData((current) => ({ ...current, [key]: event.target.value }));
+  const invalid: Partial<Record<keyof ContractState, boolean>> = showValidation ? { firstName: !data.firstName, lastName: !data.lastName, dni: data.dni.length < 6, dateOfBirth: !data.dateOfBirth, address: data.address.length < 3, floor: !data.floor, postalCode: data.postalCode.length < 4, email: !/^\S+@\S+\.\S+$/.test(data.email), phone: data.phone.replace(/\D/g, "").length < 8 } : {};
+  const fieldClass = (key: keyof ContractState, extra = "") => `field ${extra} ${invalid[key] ? "field-invalid" : ""}`.trim();
+  const message = (key: keyof ContractState, text = "Completá este campo.") => invalid[key] ? <span className="field-message">{text}</span> : null;
   return <section className="form-step contract-step" aria-labelledby="contract-title">
     <div className="section-heading"><p className="eyebrow">Solicitud de contratación</p><h1 id="contract-title">Completá tus datos</h1><p>Usaremos esta información para preparar la emisión de tu seguro.</p></div>
     <div className="contract-security"><ShieldCheck size={20} /><span>Tus datos están protegidos. Todavía no te pediremos ningún medio de pago.</span></div>
     <form onSubmit={onSubmit}>
       <div className="contract-fields">
-        <div className="field"><label htmlFor="contract-first-name">Nombre</label><input id="contract-first-name" autoComplete="given-name" value={data.firstName} onChange={field("firstName")} /></div>
-        <div className="field"><label htmlFor="contract-last-name">Apellido</label><input id="contract-last-name" autoComplete="family-name" value={data.lastName} onChange={field("lastName")} /></div>
-        <div className="field"><label htmlFor="contract-dni">DNI</label><input id="contract-dni" inputMode="numeric" maxLength={10} placeholder="Ej: 30123456" value={data.dni} onChange={event => setData(current => ({ ...current, dni: event.target.value.replace(/\D/g, "") }))} /></div>
-        <div className="field"><label htmlFor="contract-birth-date">Fecha de nacimiento</label><input id="contract-birth-date" type="date" autoComplete="bday" value={data.dateOfBirth} onChange={field("dateOfBirth")} /></div>
-        <div className="field contract-address"><label htmlFor="contract-address">Domicilio</label><input id="contract-address" autoComplete="street-address" placeholder="Calle y número" value={data.address} onChange={field("address")} /></div>
-        <div className="field"><label htmlFor="contract-floor">Piso</label><select id="contract-floor" value={data.floor} onChange={field("floor")}><option value="">Seleccioná el piso</option><option>Planta baja</option><option>Primer piso</option><option>Segundo piso o superior</option><option>No corresponde</option></select></div>
+        <div className={fieldClass("firstName")}><label htmlFor="contract-first-name">Nombre</label><input id="contract-first-name" aria-invalid={invalid.firstName} autoComplete="given-name" value={data.firstName} onChange={field("firstName")} />{message("firstName")}</div>
+        <div className={fieldClass("lastName")}><label htmlFor="contract-last-name">Apellido</label><input id="contract-last-name" aria-invalid={invalid.lastName} autoComplete="family-name" value={data.lastName} onChange={field("lastName")} />{message("lastName")}</div>
+        <div className={fieldClass("dni")}><label htmlFor="contract-dni">DNI</label><input id="contract-dni" aria-invalid={invalid.dni} inputMode="numeric" maxLength={10} placeholder="Ej: 30123456" value={data.dni} onChange={event => setData(current => ({ ...current, dni: event.target.value.replace(/\D/g, "") }))} />{message("dni", "Ingresá un DNI válido.")}</div>
+        <div className={fieldClass("dateOfBirth")}><label htmlFor="contract-birth-date">Fecha de nacimiento</label><input id="contract-birth-date" aria-invalid={invalid.dateOfBirth} type="date" autoComplete="bday" value={data.dateOfBirth} onChange={field("dateOfBirth")} />{message("dateOfBirth")}</div>
+        <div className={fieldClass("address", "contract-address")}><label htmlFor="contract-address">Domicilio</label><input id="contract-address" aria-invalid={invalid.address} autoComplete="street-address" placeholder="Calle y número" value={data.address} onChange={field("address")} />{message("address", "Ingresá la calle y el número.")}</div>
+        <div className={fieldClass("floor")}><label htmlFor="contract-floor">Piso</label><select id="contract-floor" aria-invalid={invalid.floor} value={data.floor} onChange={field("floor")}><option value="">Seleccioná el piso</option><option>Planta baja</option><option>Primer piso</option><option>Segundo piso o superior</option><option>No corresponde</option></select>{message("floor", "Seleccioná una opción.")}</div>
         <div className="field"><label htmlFor="contract-apartment">Departamento <span className="optional">(opcional)</span></label><input id="contract-apartment" placeholder="Ej: B" value={data.apartment} onChange={field("apartment")} /></div>
-        <div className="field"><label htmlFor="contract-postal-code">Código postal</label><input id="contract-postal-code" inputMode="numeric" autoComplete="postal-code" maxLength={8} value={data.postalCode} onChange={field("postalCode")} /></div>
-        <div className="field"><label htmlFor="contract-email">Email</label><input id="contract-email" type="email" autoComplete="email" value={data.email} onChange={field("email")} /></div>
-        <div className="field"><label htmlFor="contract-phone">Celular</label><input id="contract-phone" type="tel" autoComplete="tel" value={data.phone} onChange={field("phone")} /></div>
+        <div className={fieldClass("postalCode")}><label htmlFor="contract-postal-code">Código postal</label><input id="contract-postal-code" aria-invalid={invalid.postalCode} inputMode="numeric" autoComplete="postal-code" maxLength={8} value={data.postalCode} onChange={field("postalCode")} />{message("postalCode", "Ingresá un código postal válido.")}</div>
+        <div className={fieldClass("email")}><label htmlFor="contract-email">Email</label><input id="contract-email" aria-invalid={invalid.email} type="email" autoComplete="email" value={data.email} onChange={field("email")} />{message("email", "Ingresá un email válido.")}</div>
+        <div className={fieldClass("phone")}><label htmlFor="contract-phone">Celular</label><input id="contract-phone" aria-invalid={invalid.phone} type="tel" autoComplete="tel" value={data.phone} onChange={field("phone")} />{message("phone", "Ingresá un celular válido.")}</div>
       </div>
       {error && <p className="form-error" role="alert">{error}</p>}
       <div className="form-actions"><button className="button button-secondary" type="button" onClick={onBack} disabled={submitting}><ArrowLeft size={18} /> Volver</button><button className="button button-primary" type="submit" disabled={submitting}>{submitting ? "Enviando..." : "Enviar mis datos para contratar"} {!submitting && <ArrowRight size={19} />}</button></div>
@@ -121,12 +126,14 @@ function HomeQuotePage() {
   const [quote, setQuote] = useState<HomeQuote | null>(null);
   const [leadId, setLeadId] = useState("");
   const [contract, setContract] = useState<ContractState>({ firstName: "", lastName: "", dni: "", dateOfBirth: "", address: "", floor: "", apartment: "", postalCode: "", email: "", phone: "" });
+  const [validationAttempted, setValidationAttempted] = useState<Record<number, boolean>>({});
   const submissionId = useRef(crypto.randomUUID());
+  const revealErrors = (validationStep: number) => { setValidationAttempted(current => ({ ...current, [validationStep]: true })); window.setTimeout(() => document.querySelector(".field-invalid")?.scrollIntoView({ behavior: "smooth", block: "center" }), 0); };
   useEffect(() => { void fetch(`${API_URL}/leads/home/quote?squareMeters=30`).then(response => response.ok ? response.json() : Promise.reject()).then(data => setAreaOptions(data.options)).catch(() => undefined); }, []);
-  function continueToContact() { const area = Number(form.squareMeters); if (!/^\d{4}$/.test(form.postalCode) || !form.floor || !Number.isInteger(area) || area < 30 || area > 200) { setError("Completá el código postal, el piso y una superficie entre 30 y 200 m²."); return; } setError(""); setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  function continueToContact() { const area = Number(form.squareMeters); if (!/^\d{4}$/.test(form.postalCode) || !form.floor || !Number.isInteger(area) || area < 30 || area > 200) { revealErrors(1); setError("Completá los campos marcados para continuar."); return; } setError(""); setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }
   async function submitContact(event: FormEvent) {
     event.preventDefault();
-    if (form.name.trim().length < 3 || !/^\S+@\S+\.\S+$/.test(form.email) || form.phone.replace(/\D/g, "").length < 8) { setError("Ingresá tu nombre, un email válido y un teléfono de contacto."); return; }
+    if (form.name.trim().length < 3 || !/^\S+@\S+\.\S+$/.test(form.email) || form.phone.replace(/\D/g, "").length < 8) { revealErrors(2); setError("Completá los campos marcados para continuar."); return; }
     const squareMeters = Number(form.squareMeters);
     setError(""); setSubmitting(true);
     try {
@@ -161,7 +168,7 @@ function HomeQuotePage() {
   }
   async function submitContract(event: FormEvent) {
     event.preventDefault();
-    if (!contract.firstName || !contract.lastName || contract.dni.length < 6 || !contract.dateOfBirth || contract.address.length < 3 || !contract.floor || contract.postalCode.length < 4 || !/^\S+@\S+\.\S+$/.test(contract.email) || contract.phone.replace(/\D/g, "").length < 8) { setError("Completá todos los datos obligatorios para continuar."); return; }
+    if (!contract.firstName || !contract.lastName || contract.dni.length < 6 || !contract.dateOfBirth || contract.address.length < 3 || !contract.floor || contract.postalCode.length < 4 || !/^\S+@\S+\.\S+$/.test(contract.email) || contract.phone.replace(/\D/g, "").length < 8) { revealErrors(4); setError("Completá los campos marcados para continuar."); return; }
     setError(""); setSubmitting(true);
     try {
       const response = await fetch(`${API_URL}/leads/home/${leadId}/contract`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ submissionId: submissionId.current, ...contract }) });
@@ -171,10 +178,10 @@ function HomeQuotePage() {
     finally { setSubmitting(false); }
   }
   return <div className="page-shell"><SiteHeader /><main className="quote-main"><div className="quote-card">{step <= 3 && <Stepper current={step} />}
-    {step === 1 && <HomeStep form={form} setForm={setForm} onContinue={continueToContact} error={error} areaOptions={areaOptions} />}
-    {step === 2 && <ContactStep form={form} setForm={setForm} onBack={() => { setError(""); setStep(1); }} onSubmit={submitContact} error={error} submitting={submitting} />}
+    {step === 1 && <HomeStep form={form} setForm={setForm} onContinue={continueToContact} error={error} areaOptions={areaOptions} showValidation={Boolean(validationAttempted[1])} />}
+    {step === 2 && <ContactStep form={form} setForm={setForm} onBack={() => { setError(""); setStep(1); }} onSubmit={submitContact} error={error} submitting={submitting} showValidation={Boolean(validationAttempted[2])} />}
     {step === 3 && quote && <QuoteStep form={form} quote={quote} onBack={() => setStep(2)} onContract={startContract} />}
-    {step === 4 && <ContractStep data={contract} setData={setContract} onBack={() => setStep(3)} onSubmit={submitContract} error={error} submitting={submitting} />}
+    {step === 4 && <ContractStep data={contract} setData={setContract} onBack={() => setStep(3)} onSubmit={submitContract} error={error} submitting={submitting} showValidation={Boolean(validationAttempted[4])} />}
     {step === 5 && <ContractSuccess firstName={contract.firstName} />}
   </div></main><footer className="site-footer"><span>Seguro a Tiempo</span><span>Asesoramiento real para proteger lo que importa.</span></footer></div>;
 }
