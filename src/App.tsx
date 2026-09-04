@@ -1,21 +1,15 @@
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Building2, Check, Droplets, Flame, Home, House, KeyRound, LockKeyhole, Mail, MonitorSmartphone, ShieldCheck, Sparkles, Wrench } from "lucide-react";
 
 type HomeType = "Casa" | "Departamento" | "PH" | "Barrio privado";
-type FormState = { postalCode: string; homeType: HomeType; floor: string; area: string; name: string; email: string; phone: string };
+type FormState = { postalCode: string; homeType: HomeType; floor: string; squareMeters: string; name: string; email: string; phone: string };
+type HomeQuote = { requestedSquareMeters: number; quotedSquareMeters: number; areaLabel: string; monthlyPrice: number; structureCoverage: number; contentsCoverage: number; appliancesCoverage: number; glassCoverage: number; theftCoverage: number; waterDamageCoverage: number; assistanceIncluded: boolean; currency: "ARS" };
 
-const initialForm: FormState = { postalCode: "", homeType: "Casa", floor: "", area: "", name: "", email: "", phone: "" };
+const initialForm: FormState = { postalCode: "", homeType: "Casa", floor: "", squareMeters: "", name: "", email: "", phone: "" };
 const homeTypes = [
   { value: "Casa" as const, icon: House }, { value: "Departamento" as const, icon: Building2 },
   { value: "PH" as const, icon: Home }, { value: "Barrio privado" as const, icon: KeyRound },
 ];
-const quotes: Record<string, { area: string; monthly: number; structure: number }> = {
-  "50": { area: "hasta 50 m²", monthly: 18_990, structure: 75_000_000 },
-  "80": { area: "51 a 80 m²", monthly: 24_999, structure: 105_000_000 },
-  "120": { area: "81 a 120 m²", monthly: 30_990, structure: 150_000_000 },
-  "160": { area: "121 a 160 m²", monthly: 37_990, structure: 200_000_000 },
-  "200": { area: "más de 160 m²", monthly: 44_990, structure: 250_000_000 },
-};
 const API_URL = import.meta.env.VITE_API_URL || "https://api.seguroatiempo.com";
 
 function formatCurrency(value: number) {
@@ -40,7 +34,14 @@ function SiteHeader() {
   </div></header>;
 }
 
-function HomeStep({ form, setForm, onContinue, error }: { form: FormState; setForm: React.Dispatch<React.SetStateAction<FormState>>; onContinue: () => void; error: string }) {
+function HomeStep({ form, setForm, onContinue, error, areaOptions }: { form: FormState; setForm: React.Dispatch<React.SetStateAction<FormState>>; onContinue: () => void; error: string; areaOptions: number[] }) {
+  const currentArea = Number(form.squareMeters) || areaOptions[0] || 30;
+  const moveArea = (direction: -1 | 1) => {
+    const nextIndex = direction > 0
+      ? areaOptions.findIndex((value) => value > currentArea)
+      : areaOptions.filter((value) => value < currentArea).length - 1;
+    if (nextIndex >= 0) setForm((value) => ({ ...value, squareMeters: String(areaOptions[nextIndex]) }));
+  };
   return <section className="form-step" aria-labelledby="home-title">
     <div className="section-heading"><p className="eyebrow">Cotizá online en minutos</p><h1 id="home-title">Contanos sobre tu hogar</h1><p>Así podemos encontrar una cobertura pensada para vos.</p></div>
     <div className="fields-grid">
@@ -49,7 +50,7 @@ function HomeStep({ form, setForm, onContinue, error }: { form: FormState; setFo
         {homeTypes.map(({ value, icon: Icon }) => <button className={`home-type ${form.homeType === value ? "is-selected" : ""}`} type="button" aria-pressed={form.homeType === value} onClick={() => setForm(v => ({ ...v, homeType: value }))} key={value}><Icon size={25} /><span>{value}</span></button>)}
       </div></fieldset>
       <div className="field"><label htmlFor="floor">Piso</label><select id="floor" value={form.floor} onChange={e => setForm(v => ({ ...v, floor: e.target.value }))}><option value="">Seleccioná el piso</option><option>Planta baja</option><option>1° piso</option><option>2° a 5° piso</option><option>6° piso o superior</option><option>No corresponde</option></select></div>
-      <div className="field"><label htmlFor="area">Metros cuadrados cubiertos (aprox.)</label><select id="area" value={form.area} onChange={e => setForm(v => ({ ...v, area: e.target.value }))}><option value="">Seleccioná una opción</option><option value="50">Hasta 50 m²</option><option value="80">51 a 80 m²</option><option value="120">81 a 120 m²</option><option value="160">121 a 160 m²</option><option value="200">Más de 160 m²</option></select><small>No hace falta que sea exacto, elegí la opción más cercana.</small></div>
+      <div className="field"><label htmlFor="area">Metros cuadrados cubiertos (aprox.)</label><div className="area-input"><button type="button" aria-label="Reducir metros cuadrados" onClick={() => moveArea(-1)} disabled={currentArea <= (areaOptions[0] || 30)}>−</button><div><input id="area" type="number" inputMode="numeric" min={30} max={200} placeholder="Ej: 70" value={form.squareMeters} onChange={e => setForm(v => ({ ...v, squareMeters: e.target.value.replace(/\D/g, "") }))} /><span>m²</span></div><button type="button" aria-label="Aumentar metros cuadrados" onClick={() => moveArea(1)} disabled={currentArea >= (areaOptions.at(-1) || 200)}>+</button></div><small>Ingresá una superficie entre 30 y 200 m². Si queda entre dos tramos, cotizamos el inmediato superior.</small></div>
     </div>
     {error && <p className="form-error" role="alert">{error}</p>}
     <div className="form-actions"><span className="trust-note"><ShieldCheck size={17} /> Tu información está protegida</span><button className="button button-primary" type="button" onClick={onContinue}>Continuar <ArrowRight size={19} /></button></div>
@@ -69,18 +70,17 @@ function ContactStep({ form, setForm, onBack, onSubmit, error, submitting }: { f
   </section>;
 }
 
-function QuoteStep({ form, onBack }: { form: FormState; onBack: () => void }) {
-  const quote = quotes[form.area], firstName = form.name.trim().split(/\s+/)[0] || "";
-  if (!quote) return null;
+function QuoteStep({ form, quote, onBack }: { form: FormState; quote: HomeQuote; onBack: () => void }) {
+  const firstName = form.name.trim().split(/\s+/)[0] || "";
   const coverage = [
-    { icon: Flame, label: "Incendio de estructura", value: formatCurrency(quote.structure) }, { icon: Home, label: "Incendio del contenido", value: "$20.000.000" },
-    { icon: MonitorSmartphone, label: "Electrodomésticos", value: "$3.000.000" }, { icon: Sparkles, label: "Cristales", value: "$500.000" },
-    { icon: LockKeyhole, label: "Robo de contenido", value: "$2.000.000" }, { icon: Droplets, label: "Daños por agua", value: "$1.000.000" },
+    { icon: Flame, label: "Incendio de estructura", value: formatCurrency(quote.structureCoverage) }, { icon: Home, label: "Incendio del contenido", value: formatCurrency(quote.contentsCoverage) },
+    { icon: MonitorSmartphone, label: "Electrodomésticos", value: formatCurrency(quote.appliancesCoverage) }, { icon: Sparkles, label: "Cristales", value: formatCurrency(quote.glassCoverage) },
+    { icon: LockKeyhole, label: "Robo de contenido", value: formatCurrency(quote.theftCoverage) }, { icon: Droplets, label: "Daños por agua", value: formatCurrency(quote.waterDamageCoverage) },
     { icon: Wrench, label: "Asistencia para tu hogar", value: "Incluida" },
   ];
   return <section className="form-step quote-step" aria-labelledby="quote-title">
     <div className="quote-welcome"><span className="success-icon"><Check size={23} strokeWidth={3} /></span><div><h1 id="quote-title">¡Listo, {firstName}!</h1><p>Tenemos una cobertura pensada para tu hogar.</p></div></div>
-    <div className="quote-layout"><div><div className="home-summary">Cobertura sugerida para <strong>{form.homeType} de {quote.area}</strong></div><div className="price-card"><span>Tu seguro está respaldado por</span><div className="insurer-logo"><img src="/assets/allianz.png" alt="Allianz" /></div><small>Tu seguro de hogar</small><div className="price">{formatCurrency(quote.monthly)} <span>/mes</span></div><strong>12 CUOTAS FIJAS</strong><span>Póliza anual</span><em>Precio demostrativo · sin conexión al tarifario</em></div><button className="button button-primary full-button" type="button" disabled>Quiero contratar <ArrowRight size={19} /></button></div>
+    <div className="quote-layout"><div><div className="home-summary">Cobertura sugerida para <strong>{form.homeType} de {quote.quotedSquareMeters} m²</strong></div><div className="price-card"><span>Tu seguro está respaldado por</span><div className="insurer-logo"><img src="/assets/allianz.png" alt="Allianz" /></div><small>Tu seguro de hogar</small><div className="price">{formatCurrency(quote.monthlyPrice)} <span>/mes</span></div><strong>12 CUOTAS FIJAS</strong><span>Póliza anual</span><em>Precio consultado en el tarifario vigente</em></div><button className="button button-primary full-button" type="button" disabled>Quiero contratar <ArrowRight size={19} /></button></div>
       <div className="coverage-card"><h2>Tu cobertura</h2>{coverage.map(({ icon: Icon, label, value }, index) => <div className="coverage-row" key={label}><span><Icon size={19} /> {label}</span><strong className={index === coverage.length - 1 ? "included" : ""}>{value}</strong></div>)}</div>
     </div><div className="quote-footer"><button className="text-button" type="button" onClick={onBack}><ArrowLeft size={17} /> Corregir mis datos</button><span>Guardamos tu solicitud para que un asesor pueda ayudarte.</span></div>
   </section>;
@@ -88,13 +88,15 @@ function QuoteStep({ form, onBack }: { form: FormState; onBack: () => void }) {
 
 function HomeQuotePage() {
   const [step, setStep] = useState(1), [form, setForm] = useState(initialForm), [error, setError] = useState(""), [submitting, setSubmitting] = useState(false);
+  const [areaOptions, setAreaOptions] = useState<number[]>([30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,110,120,130,140,150,160,170,180,190,200]);
+  const [quote, setQuote] = useState<HomeQuote | null>(null);
   const submissionId = useRef(crypto.randomUUID());
-  function continueToContact() { if (!/^\d{4}$/.test(form.postalCode) || !form.floor || !form.area) { setError("Completá el código postal, el piso y los metros cuadrados."); return; } setError(""); setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  useEffect(() => { void fetch(`${API_URL}/leads/home/quote?squareMeters=30`).then(response => response.ok ? response.json() : Promise.reject()).then(data => setAreaOptions(data.options)).catch(() => undefined); }, []);
+  function continueToContact() { const area = Number(form.squareMeters); if (!/^\d{4}$/.test(form.postalCode) || !form.floor || !Number.isInteger(area) || area < 30 || area > 200) { setError("Completá el código postal, el piso y una superficie entre 30 y 200 m²."); return; } setError(""); setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }
   async function submitContact(event: FormEvent) {
     event.preventDefault();
     if (form.name.trim().length < 3 || !/^\S+@\S+\.\S+$/.test(form.email) || form.phone.replace(/\D/g, "").length < 8) { setError("Ingresá tu nombre, un email válido y un teléfono de contacto."); return; }
-    const quote = quotes[form.area];
-    if (!quote) { setError("Seleccioná los metros cuadrados de tu hogar."); return; }
+    const squareMeters = Number(form.squareMeters);
     setError(""); setSubmitting(true);
     try {
       const params = new URLSearchParams(window.location.search);
@@ -103,7 +105,7 @@ function HomeQuotePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           submissionId: submissionId.current, name: form.name, email: form.email, phone: form.phone,
-          postalCode: form.postalCode, homeType: form.homeType, floor: form.floor, areaCode: form.area,
+          postalCode: form.postalCode, homeType: form.homeType, floor: form.floor, squareMeters,
           origin: {
             pageUrl: window.location.href, referrer: document.referrer || undefined,
             utmSource: params.get("utm_source") || undefined, utmMedium: params.get("utm_medium") || undefined,
@@ -113,15 +115,17 @@ function HomeQuotePage() {
         }),
       });
       if (!response.ok) throw new Error("No pudimos guardar la solicitud");
+      const data = await response.json();
+      setQuote(data.quote);
       setStep(3); window.scrollTo({ top: 0, behavior: "smooth" });
     } catch {
       setError("No pudimos guardar tu solicitud. Por favor, intentá nuevamente.");
     } finally { setSubmitting(false); }
   }
   return <div className="page-shell"><SiteHeader /><main className="quote-main"><div className="quote-card"><Stepper current={step} />
-    {step === 1 && <HomeStep form={form} setForm={setForm} onContinue={continueToContact} error={error} />}
+    {step === 1 && <HomeStep form={form} setForm={setForm} onContinue={continueToContact} error={error} areaOptions={areaOptions} />}
     {step === 2 && <ContactStep form={form} setForm={setForm} onBack={() => { setError(""); setStep(1); }} onSubmit={submitContact} error={error} submitting={submitting} />}
-    {step === 3 && <QuoteStep form={form} onBack={() => setStep(2)} />}
+    {step === 3 && quote && <QuoteStep form={form} quote={quote} onBack={() => setStep(2)} />}
   </div></main><footer className="site-footer"><span>Seguro a Tiempo</span><span>Asesoramiento real para proteger lo que importa.</span></footer></div>;
 }
 
