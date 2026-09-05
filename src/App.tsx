@@ -26,6 +26,10 @@ function cleanPhone(value: string) {
   return value.replace(/[^\d+\s()-]/g, "").replace(/(?!^)\+/g, "").slice(0, 24);
 }
 
+function validExactFloor(category: string, value: string) {
+  return category === "Segundo piso o superior" ? /^\d+$/.test(value) && Number(value) >= 2 : Boolean(value);
+}
+
 function Stepper({ current }: { current: number }) {
   return <ol className="stepper" aria-label={`Paso ${current} de 3`}>
     {["Tu hogar", "Tus datos", "Tu cotización"].map((label, index) => {
@@ -98,9 +102,9 @@ function QuoteStep({ form, quote, onBack, onContract }: { form: FormState; quote
   </section>;
 }
 
-function ContractStep({ data, setData, onBack, onSubmit, error, submitting, showValidation }: { data: ContractState; setData: React.Dispatch<React.SetStateAction<ContractState>>; onBack: () => void; onSubmit: (event: FormEvent) => void; error: string; submitting: boolean; showValidation: boolean }) {
+function ContractStep({ data, setData, floorCategory, onBack, onSubmit, error, submitting, showValidation }: { data: ContractState; setData: React.Dispatch<React.SetStateAction<ContractState>>; floorCategory: string; onBack: () => void; onSubmit: (event: FormEvent) => void; error: string; submitting: boolean; showValidation: boolean }) {
   const field = (key: keyof ContractState) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setData((current) => ({ ...current, [key]: event.target.value }));
-  const invalid: Partial<Record<keyof ContractState, boolean>> = showValidation ? { firstName: !data.firstName, lastName: !data.lastName, dni: data.dni.length < 6, dateOfBirth: !data.dateOfBirth, address: data.address.length < 3, floor: !data.floor, postalCode: data.postalCode.length < 4, email: !/^\S+@\S+\.\S+$/.test(data.email), phone: !validArgentinePhone(data.phone) } : {};
+  const invalid: Partial<Record<keyof ContractState, boolean>> = showValidation ? { firstName: !data.firstName, lastName: !data.lastName, dni: data.dni.length < 6, dateOfBirth: !data.dateOfBirth, address: data.address.length < 3, floor: !validExactFloor(floorCategory, data.floor), postalCode: data.postalCode.length < 4, email: !/^\S+@\S+\.\S+$/.test(data.email), phone: !validArgentinePhone(data.phone) } : {};
   const fieldClass = (key: keyof ContractState, extra = "") => `field ${extra} ${invalid[key] ? "field-invalid" : ""}`.trim();
   const message = (key: keyof ContractState, text = "Completá este campo.") => invalid[key] ? <span className="field-message">{text}</span> : null;
   return <section className="form-step contract-step" aria-labelledby="contract-title">
@@ -113,7 +117,7 @@ function ContractStep({ data, setData, onBack, onSubmit, error, submitting, show
         <div className={fieldClass("dni")}><label htmlFor="contract-dni">DNI</label><input id="contract-dni" aria-invalid={invalid.dni} inputMode="numeric" maxLength={10} placeholder="Ej: 30123456" value={data.dni} onChange={event => setData(current => ({ ...current, dni: event.target.value.replace(/\D/g, "") }))} />{message("dni", "Ingresá un DNI válido.")}</div>
         <div className={fieldClass("dateOfBirth")}><label htmlFor="contract-birth-date">Fecha de nacimiento</label><input id="contract-birth-date" aria-invalid={invalid.dateOfBirth} type="date" autoComplete="bday" value={data.dateOfBirth} onChange={field("dateOfBirth")} />{message("dateOfBirth")}</div>
         <div className={fieldClass("address", "contract-address")}><label htmlFor="contract-address">Domicilio</label><input id="contract-address" aria-invalid={invalid.address} autoComplete="street-address" placeholder="Calle y número" value={data.address} onChange={field("address")} />{message("address", "Ingresá la calle y el número.")}</div>
-        <div className={fieldClass("floor")}><label htmlFor="contract-floor">Piso</label><select id="contract-floor" aria-invalid={invalid.floor} value={data.floor} onChange={field("floor")}><option value="">Seleccioná el piso</option><option>Planta baja</option><option>Primer piso</option><option>Segundo piso o superior</option><option>No corresponde</option></select>{message("floor", "Seleccioná una opción.")}</div>
+        <div className={fieldClass("floor")}><label htmlFor="contract-floor">{floorCategory === "Segundo piso o superior" ? "Piso exacto" : "Piso"}</label>{floorCategory === "Segundo piso o superior" ? <input id="contract-floor" aria-invalid={invalid.floor} type="number" inputMode="numeric" min={2} placeholder="Ej: 7" value={data.floor} onChange={event => setData(current => ({ ...current, floor: event.target.value.replace(/\D/g, "") }))} /> : <input id="contract-floor" value={data.floor} readOnly />}{message("floor", "Ingresá el número de piso exacto (2 o superior).")}</div>
         <div className="field"><label htmlFor="contract-apartment">Departamento <span className="optional">(opcional)</span></label><input id="contract-apartment" placeholder="Ej: B" value={data.apartment} onChange={field("apartment")} /></div>
         <div className={fieldClass("postalCode")}><label htmlFor="contract-postal-code">Código postal</label><input id="contract-postal-code" aria-invalid={invalid.postalCode} inputMode="numeric" autoComplete="postal-code" maxLength={8} value={data.postalCode} onChange={field("postalCode")} />{message("postalCode", "Ingresá un código postal válido.")}</div>
         <div className={fieldClass("email")}><label htmlFor="contract-email">Email</label><input id="contract-email" aria-invalid={invalid.email} type="email" autoComplete="email" value={data.email} onChange={field("email")} />{message("email", "Ingresá un email válido.")}</div>
@@ -172,12 +176,12 @@ function HomeQuotePage() {
   }
   function startContract() {
     const [firstName = "", ...lastNameParts] = form.name.trim().split(/\s+/);
-    setContract({ firstName, lastName: lastNameParts.join(" "), dni: "", dateOfBirth: "", address: "", floor: form.floor, apartment: "", postalCode: form.postalCode, email: form.email, phone: form.phone });
+    setContract({ firstName, lastName: lastNameParts.join(" "), dni: "", dateOfBirth: "", address: "", floor: form.floor === "Segundo piso o superior" ? "" : form.floor, apartment: "", postalCode: form.postalCode, email: form.email, phone: form.phone });
     setError(""); setStep(4); window.scrollTo({ top: 0, behavior: "smooth" });
   }
   async function submitContract(event: FormEvent) {
     event.preventDefault();
-    if (!contract.firstName || !contract.lastName || contract.dni.length < 6 || !contract.dateOfBirth || contract.address.length < 3 || !contract.floor || contract.postalCode.length < 4 || !/^\S+@\S+\.\S+$/.test(contract.email) || !validArgentinePhone(contract.phone)) { revealErrors(4); setError("Completá los campos marcados para continuar."); return; }
+    if (!contract.firstName || !contract.lastName || contract.dni.length < 6 || !contract.dateOfBirth || contract.address.length < 3 || !validExactFloor(form.floor, contract.floor) || contract.postalCode.length < 4 || !/^\S+@\S+\.\S+$/.test(contract.email) || !validArgentinePhone(contract.phone)) { revealErrors(4); setError("Completá los campos marcados para continuar."); return; }
     setError(""); setSubmitting(true);
     try {
       const response = await fetch(`${API_URL}/leads/home/${leadId}/contract`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ submissionId: submissionId.current, ...contract }) });
@@ -190,7 +194,7 @@ function HomeQuotePage() {
     {step === 1 && <HomeStep form={form} setForm={setForm} onContinue={continueToContact} error={error} areaOptions={areaOptions} showValidation={Boolean(validationAttempted[1])} />}
     {step === 2 && <ContactStep form={form} setForm={setForm} onBack={() => { setError(""); setStep(1); }} onSubmit={submitContact} error={error} submitting={submitting} showValidation={Boolean(validationAttempted[2])} />}
     {step === 3 && quote && <QuoteStep form={form} quote={quote} onBack={() => setStep(2)} onContract={startContract} />}
-    {step === 4 && <ContractStep data={contract} setData={setContract} onBack={() => setStep(3)} onSubmit={submitContract} error={error} submitting={submitting} showValidation={Boolean(validationAttempted[4])} />}
+    {step === 4 && <ContractStep data={contract} setData={setContract} floorCategory={form.floor} onBack={() => setStep(3)} onSubmit={submitContract} error={error} submitting={submitting} showValidation={Boolean(validationAttempted[4])} />}
     {step === 5 && <ContractSuccess firstName={contract.firstName} />}
   </div></main><footer className="site-footer"><span>Seguro a Tiempo</span><span>Asesoramiento real para proteger lo que importa.</span></footer></div>;
 }
