@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Building2, Check, Droplets, Flame, Home, House, KeyRound, LockKeyhole, Mail, MonitorSmartphone, ShieldCheck, Sparkles, Wrench } from "lucide-react";
+import { SatAIWidget } from "./SatAIWidget";
 
 type HomeType = "Casa" | "Departamento" | "PH" | "Barrio privado";
 type FormState = { postalCode: string; homeType: HomeType; floor: string; squareMeters: string; name: string; email: string; phone: string };
@@ -190,7 +191,7 @@ function HomeQuotePage() {
     } catch { setError("No pudimos enviar tus datos. Por favor, intentá nuevamente."); }
     finally { setSubmitting(false); }
   }
-  return <div className="page-shell"><SiteHeader /><main className="quote-main"><div className="quote-card">{step <= 3 && <Stepper current={step} />}
+  return <div className="page-shell"><SiteHeader /><main className="quote-main"><SatAIWidget slug="allianz-hogar" /><div className="quote-card">{step <= 3 && <Stepper current={step} />}
     {step === 1 && <HomeStep form={form} setForm={setForm} onContinue={continueToContact} error={error} areaOptions={areaOptions} showValidation={Boolean(validationAttempted[1])} />}
     {step === 2 && <ContactStep form={form} setForm={setForm} onBack={() => { setError(""); setStep(1); }} onSubmit={submitContact} error={error} submitting={submitting} showValidation={Boolean(validationAttempted[2])} />}
     {step === 3 && quote && <QuoteStep form={form} quote={quote} onBack={() => setStep(2)} onContract={startContract} />}
