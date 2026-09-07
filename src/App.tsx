@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Building2, Check, Droplets, Flame, Home, House, KeyRound, LockKeyhole, Mail, MonitorSmartphone, ShieldCheck, Sparkles, Wrench } from "lucide-react";
 import { SatAIWidget } from "./SatAIWidget";
+import { SiteFooter } from "./SiteFooter";
 
 type HomeType = "Casa" | "Departamento" | "PH" | "Barrio privado";
 type FormState = { postalCode: string; homeType: HomeType; floor: string; squareMeters: string; name: string; email: string; phone: string };
@@ -200,7 +201,7 @@ function HomeQuotePage() {
     {step === 3 && quote && <QuoteStep form={form} quote={quote} onBack={() => setStep(2)} onContract={startContract} />}
     {step === 4 && <ContractStep data={contract} setData={setContract} floorCategory={form.floor} onBack={() => setStep(3)} onSubmit={submitContract} error={error} submitting={submitting} showValidation={Boolean(validationAttempted[4])} />}
     {step === 5 && <ContractSuccess firstName={contract.firstName} />}
-  </div></main><footer className="site-footer"><span>Seguro a Tiempo</span><span>Asesoramiento real para proteger lo que importa.</span></footer></div>;
+  </div></main><SiteFooter /></div>;
 }
 
 export function App() { return <HomeQuotePage />; }
