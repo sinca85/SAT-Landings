@@ -20,17 +20,24 @@ export function GoogleAnalytics() {
       .then((configuration) => {
         const measurementId = configuration?.measurementId;
         if (cancelled || !measurementId || !/^G-[A-Z0-9]+$/i.test(measurementId)) return;
-        if (!document.querySelector(`script[data-sat-ga="${measurementId}"]`)) {
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = window.gtag || function gtag(...args: unknown[]) { window.dataLayer?.push(args); };
+        window.gtag("js", new Date());
+        const configureAndTrackPage = () => {
+          window.gtag?.("config", measurementId, { send_page_view: false });
+          window.gtag?.("event", "page_view", { page_title: document.title, page_location: window.location.href });
+        };
+        const existingScript = document.querySelector(`script[data-sat-ga="${measurementId}"]`);
+        if (!existingScript) {
           const script = document.createElement("script");
           script.async = true;
           script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`;
           script.dataset.satGa = measurementId;
+          script.addEventListener("load", configureAndTrackPage, { once: true });
           document.head.appendChild(script);
+        } else {
+          configureAndTrackPage();
         }
-        window.dataLayer = window.dataLayer || [];
-        window.gtag = window.gtag || function gtag(...args: unknown[]) { window.dataLayer?.push(args); };
-        window.gtag("js", new Date());
-        window.gtag("config", measurementId);
       })
       .catch(() => undefined);
     return () => { cancelled = true; };
