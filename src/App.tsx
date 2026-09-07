@@ -60,11 +60,11 @@ const faqItems = [
 ];
 
 const situations = [
-  { icon: Tv, title: "Se me quemó la TV", text: "Te contamos si está cubierta y qué documentación necesitás." },
-  { icon: Pipette, title: "Se rompió un caño", text: "Conocé qué daños por agua contempla tu seguro." },
-  { icon: UserRound, title: "Me robaron en mi casa", text: "Te explicamos qué hacer y cómo funciona la cobertura." },
-  { icon: DoorOpen, title: "Se rompió una ventana", text: "Revisá cuándo aplica la cobertura de cristales." },
-  { icon: MonitorSmartphone, title: "Se dañó mi notebook", text: "Enterate qué cobertura puede corresponder." },
+  { icon: Tv, title: "Se me quemó la TV", text: "Te contamos si está cubierta y qué documentación necesitás.", answer: "Puede corresponder la cobertura de incendio del contenido cuando el daño se origina en un incendio cubierto. Para confirmar el alcance en tu caso, conservá el equipo y la documentación del siniestro y consultá al asistente o a un asesor." },
+  { icon: Pipette, title: "Se rompió un caño", text: "Conocé qué daños por agua contempla tu seguro.", answer: "Los daños accidentales por escapes o roturas de cañerías pueden estar contemplados dentro de daños por agua, según las condiciones, límites y deducibles de tu póliza. La asistencia de plomería también puede ayudarte con la urgencia." },
+  { icon: UserRound, title: "Me robaron en mi casa", text: "Te explicamos qué hacer y cómo funciona la cobertura.", answer: "La cobertura de robo de contenido contempla los bienes asegurados dentro de la vivienda, con los límites y requisitos de la póliza. Realizá la denuncia y conservá comprobantes e inventario de los bienes afectados." },
+  { icon: DoorOpen, title: "Se rompió una ventana", text: "Revisá cuándo aplica la cobertura de cristales.", answer: "La rotura accidental de cristales asegurados de la vivienda puede estar cubierta. No retires los restos antes de documentar el daño y verificá que el cristal esté incluido en tu póliza." },
+  { icon: MonitorSmartphone, title: "Se dañó mi notebook", text: "Enterate qué cobertura puede corresponder.", answer: "Una notebook puede formar parte del contenido asegurado, sujeto a la cobertura contratada, suma asegurada y exclusiones. Tené a mano la factura o comprobante de compra y consultá el caso puntual." },
 ];
 
 const assistance = [
@@ -81,7 +81,7 @@ function HomeInformation() {
     <div className="info-heading"><p className="eyebrow">Información para decidir tranquilo</p><h2>Todo lo que querés saber sobre tu seguro</h2><p>Respondemos las dudas más comunes para que tengas toda la información en un solo lugar.</p><SatAIWidget slug="allianz-hogar" /></div>
     <div className="info-tabs" aria-label="Temas principales">{[[ShieldCheck, "Coberturas"], [MonitorSmartphone, "Electrodomésticos"], [LockKeyhole, "Robo"], [Droplets, "Daños por agua y cristales"], [Wrench, "Asistencia 24 hs"], [Mail, "Contratación y siniestros"]].map(([Icon, label]) => <span key={String(label)}><Icon size={21} />{label as string}</span>)}</div>
     <div className="info-columns"><div className="faq-list"><h3><ShieldCheck size={22} /> Coberturas</h3>{faqItems.map(([question, answer], index) => <details open={index === 0} key={question}><summary>{question}<span>＋</span></summary><p>{answer}</p></details>)}</div>
-      <div className="situations"><h3>¿Qué cubre en situaciones reales?</h3>{situations.map(({ icon: Icon, title, text }) => <div className="situation-card" key={title}><Icon size={25} /><div><strong>{title}</strong><span>{text}</span></div><ArrowRight size={17} /></div>)}</div></div>
+      <div className="situations"><h3>¿Qué cubre en situaciones reales?</h3>{situations.map(({ icon: Icon, title, text, answer }) => <details className="situation-card" key={title}><summary><Icon size={25} /><div><strong>{title}</strong><span>{text}</span></div><span className="situation-toggle" aria-hidden="true" /></summary><p>{answer}</p></details>)}</div></div>
     <div className="assistance"><div className="assistance-heading"><div><h3>Asistencia para tu hogar 24 hs</h3><p>Estamos siempre que nos necesitás.</p></div><ShieldCheck size={30} /></div><div className="assistance-grid">{assistance.map(({ icon: Icon, title, text }) => <div className="assistance-item" key={title}><span className="assistance-icon"><Icon size={22} /></span><strong>{title}</strong><p>{text}</p></div>)}</div><div className="assistance-note"><span><CalendarDays size={20} /> Hasta 4 eventos por año calendario en cada servicio esencial.</span><span><CircleDollarSign size={20} /> Tope de $75.000 por evento. Podés ampliar a $150.000 utilizando 2 eventos.</span><span><ShieldCheck size={20} /> Servicio brindado por profesionales calificados de nuestra red.</span></div></div>
   </section>;
 }
