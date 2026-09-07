@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Building2, Check, Droplets, Flame, Home, House, KeyRound, LockKeyhole, Mail, MonitorSmartphone, ShieldCheck, Sparkles, Wrench } from "lucide-react";
+import { ArrowLeft, ArrowRight, Building2, Check, Droplets, Flame, Home, House, KeyRound, LockKeyhole, Mail, MonitorSmartphone, ShieldCheck, Sparkles, Wrench, Tv, Pipette, UserRound, DoorOpen, Zap, Wind, Hammer, CalendarDays, CircleDollarSign } from "lucide-react";
 import { SatAIWidget } from "./SatAIWidget";
 import { SiteFooter } from "./SiteFooter";
 
@@ -48,6 +48,43 @@ function SiteHeader() {
     <a href="https://seguroatiempo.com/" aria-label="Seguro a Tiempo, inicio"><img src="/assets/logo-seguro-a-tiempo.svg" alt="Seguro a Tiempo" className="brand-logo" /></a>
     <div className="secure-label"><ShieldCheck size={19} /> Cotización <strong>100% segura</strong></div>
   </div></header>;
+}
+
+const faqItems = [
+  ["¿Qué cubre el seguro de hogar?", "Protege tu vivienda y su contenido frente a eventos previstos en tu póliza, como incendio, robo, daños por agua y rotura de cristales. También incluye asistencia para tu hogar las 24 horas, los 365 días del año."],
+  ["¿Qué significa “incendio de estructura”?", "Es el daño producido por incendio en las partes fijas de la vivienda: paredes, techos, pisos, aberturas e instalaciones que forman parte del inmueble, según la suma asegurada contratada."],
+  ["¿Qué es “incendio del contenido”?", "Es la cobertura para los bienes que están dentro de tu hogar, como muebles, ropa, electrodomésticos y objetos personales, de acuerdo con las condiciones y límites de tu póliza."],
+  ["¿Qué son “daños por agua”?", "Ampara daños accidentales ocasionados por escapes o filtraciones de cañerías e instalaciones, con el alcance, deducibles y límites que indique tu póliza."],
+  ["¿Qué cristales están cubiertos?", "La cobertura contempla la rotura accidental de cristales asegurados de la vivienda, como ventanas y puertas, siempre que estén incluidos en la póliza y se respeten sus condiciones."],
+  ["¿Qué no está cubierto por el seguro?", "Quedan excluidos los hechos y bienes indicados en las condiciones de tu póliza, además de daños intencionales, desgaste normal y falta de mantenimiento. Ante una duda puntual, consultá al asistente o a un asesor."],
+];
+
+const situations = [
+  { icon: Tv, title: "Se me quemó la TV", text: "Te contamos si está cubierta y qué documentación necesitás." },
+  { icon: Pipette, title: "Se rompió un caño", text: "Conocé qué daños por agua contempla tu seguro." },
+  { icon: UserRound, title: "Me robaron en mi casa", text: "Te explicamos qué hacer y cómo funciona la cobertura." },
+  { icon: DoorOpen, title: "Se rompió una ventana", text: "Revisá cuándo aplica la cobertura de cristales." },
+  { icon: MonitorSmartphone, title: "Se dañó mi notebook", text: "Enterate qué cobertura puede corresponder." },
+];
+
+const assistance = [
+  { icon: Zap, title: "Electricidad", text: "Corte total de luz por cortocircuito o desperfecto en instalación fija." },
+  { icon: Wind, title: "Gas", text: "Fugas o pérdidas en instalaciones fijas. Incluye mano de obra y materiales." },
+  { icon: Pipette, title: "Plomería", text: "Pérdidas de agua, roturas de cañerías, sanitarios y más." },
+  { icon: Hammer, title: "Destapaciones", text: "Obstrucciones en cañerías internas y desagües de la vivienda." },
+  { icon: KeyRound, title: "Cerrajería", text: "Apertura de puertas por pérdida de llaves o extravío." },
+  { icon: Wrench, title: "Mantenimiento", text: "Arreglos cotidianos, instalaciones de artefactos y más." },
+];
+
+function HomeInformation() {
+  return <section className="home-information" aria-label="Información del seguro de hogar">
+    <div className="info-heading"><p className="eyebrow">Información para decidir tranquilo</p><h2>Todo lo que querés saber sobre tu seguro</h2><p>Respondemos las dudas más comunes para que tengas toda la información en un solo lugar.</p></div>
+    <div className="info-tabs" aria-label="Temas principales">{[[ShieldCheck, "Coberturas"], [MonitorSmartphone, "Electrodomésticos"], [LockKeyhole, "Robo"], [Droplets, "Daños por agua y cristales"], [Wrench, "Asistencia 24 hs"], [Mail, "Contratación y siniestros"]].map(([Icon, label]) => <span key={String(label)}><Icon size={21} />{label as string}</span>)}</div>
+    <div className="info-columns"><div className="faq-list"><h3><ShieldCheck size={22} /> Coberturas</h3>{faqItems.map(([question, answer], index) => <details open={index === 0} key={question}><summary>{question}<span>＋</span></summary><p>{answer}</p></details>)}</div>
+      <div className="situations"><h3>¿Qué cubre en situaciones reales?</h3>{situations.map(({ icon: Icon, title, text }) => <div className="situation-card" key={title}><Icon size={25} /><div><strong>{title}</strong><span>{text}</span></div><ArrowRight size={17} /></div>)}</div></div>
+    <div className="assistance"><div className="assistance-heading"><div><h3>Asistencia para tu hogar 24 hs</h3><p>Estamos siempre que nos necesitás.</p></div><ShieldCheck size={30} /></div><div className="assistance-grid">{assistance.map(({ icon: Icon, title, text }) => <div className="assistance-item" key={title}><span className="assistance-icon"><Icon size={22} /></span><strong>{title}</strong><p>{text}</p></div>)}</div><div className="assistance-note"><span><CalendarDays size={20} /> Hasta 4 eventos por año calendario en cada servicio esencial.</span><span><CircleDollarSign size={20} /> Tope de $75.000 por evento. Podés ampliar a $150.000 utilizando 2 eventos.</span><span><ShieldCheck size={20} /> Servicio brindado por profesionales calificados de nuestra red.</span></div></div>
+    <div className="info-contact"><div><strong>¿No encontraste lo que buscabas?</strong><span>Hablá con un asesor y te ayudamos.</span></div><a href="https://wa.me/5491150625555" target="_blank" rel="noreferrer" className="button button-primary">Hablar por WhatsApp <ArrowRight size={18} /></a></div>
+  </section>;
 }
 
 function HomeStep({ form, setForm, onContinue, error, areaOptions, showValidation }: { form: FormState; setForm: React.Dispatch<React.SetStateAction<FormState>>; onContinue: () => void; error: string; areaOptions: number[]; showValidation: boolean }) {
@@ -195,7 +232,7 @@ function HomeQuotePage() {
     } catch (error) { setError(error instanceof Error ? error.message : "No pudimos enviar tus datos. Por favor, intentá nuevamente."); }
     finally { setSubmitting(false); }
   }
-  return <div className="page-shell"><SiteHeader /><main className="quote-main"><SatAIWidget slug="allianz-hogar" /><div className="quote-card">{step <= 3 && <Stepper current={step} />}
+  return <div className="page-shell"><SiteHeader /><main className="quote-main"><SatAIWidget slug="allianz-hogar" /><HomeInformation /><div className="quote-card">{step <= 3 && <Stepper current={step} />}
     {step === 1 && <HomeStep form={form} setForm={setForm} onContinue={continueToContact} error={error} areaOptions={areaOptions} showValidation={Boolean(validationAttempted[1])} />}
     {step === 2 && <ContactStep form={form} setForm={setForm} onBack={() => { setError(""); setStep(1); }} onSubmit={submitContact} error={error} submitting={submitting} showValidation={Boolean(validationAttempted[2])} />}
     {step === 3 && quote && <QuoteStep form={form} quote={quote} onBack={() => setStep(2)} onContract={startContract} />}
