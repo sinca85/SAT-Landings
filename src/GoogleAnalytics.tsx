@@ -25,7 +25,11 @@ export function GoogleAnalytics() {
         window.gtag("js", new Date());
         const configureAndTrackPage = () => {
           window.gtag?.("config", measurementId, { send_page_view: false });
-          window.gtag?.("event", "page_view", { page_title: document.title, page_location: window.location.href });
+          // Google procesa la configuración del contenedor de forma asíncrona.
+          // El breve diferimiento garantiza que el evento use la medición ya inicializada.
+          window.setTimeout(() => {
+            window.gtag?.("event", "page_view", { page_title: document.title, page_location: window.location.href });
+          }, 100);
         };
         const existingScript = document.querySelector(`script[data-sat-ga="${measurementId}"]`);
         if (!existingScript) {
