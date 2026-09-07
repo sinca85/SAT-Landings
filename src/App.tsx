@@ -76,15 +76,15 @@ const assistance = [
   { icon: Wrench, title: "Mantenimiento", text: "Arreglos cotidianos, instalaciones de artefactos y más." },
 ];
 
+function InfoIntro() { return <section className="home-information info-intro" aria-label="Información del seguro de hogar"><div className="info-heading"><p className="eyebrow">Información para decidir tranquilo</p><h2>Todo lo que querés saber sobre tu seguro</h2><p>Respondemos las dudas más comunes para que tengas toda la información en un solo lugar.</p><SatAIWidget slug="allianz-hogar" /></div></section>; }
 function HomeInformation() {
-  return <section className="home-information" aria-label="Información del seguro de hogar">
-    <div className="info-heading"><p className="eyebrow">Información para decidir tranquilo</p><h2>Todo lo que querés saber sobre tu seguro</h2><p>Respondemos las dudas más comunes para que tengas toda la información en un solo lugar.</p><SatAIWidget slug="allianz-hogar" /></div>
+  return <section className="home-information info-details" aria-label="Coberturas y situaciones del seguro de hogar">
     <div className="info-tabs" aria-label="Temas principales">{[[ShieldCheck, "Coberturas"], [MonitorSmartphone, "Electrodomésticos"], [LockKeyhole, "Robo"], [Droplets, "Daños por agua y cristales"], [Wrench, "Asistencia 24 hs"], [Mail, "Contratación y siniestros"]].map(([Icon, label]) => <span key={String(label)}><Icon size={21} />{label as string}</span>)}</div>
     <div className="info-columns"><div className="faq-list"><h3><ShieldCheck size={22} /> Coberturas</h3>{faqItems.map(([question, answer], index) => <details open={index === 0} key={question}><summary>{question}<span>＋</span></summary><p>{answer}</p></details>)}</div>
       <div className="situations"><h3>¿Qué cubre en situaciones reales?</h3>{situations.map(({ icon: Icon, title, text, answer }) => <details className="situation-card" key={title}><summary><Icon size={25} /><div><strong>{title}</strong><span>{text}</span></div><span className="situation-toggle" aria-hidden="true" /></summary><p>{answer}</p></details>)}</div></div>
-    <div className="assistance"><div className="assistance-heading"><div><h3>Asistencia para tu hogar 24 hs</h3><p>Estamos siempre que nos necesitás.</p></div><ShieldCheck size={30} /></div><div className="assistance-grid">{assistance.map(({ icon: Icon, title, text }) => <div className="assistance-item" key={title}><span className="assistance-icon"><Icon size={22} /></span><strong>{title}</strong><p>{text}</p></div>)}</div><div className="assistance-note"><span><CalendarDays size={20} /> Hasta 4 eventos por año calendario en cada servicio esencial.</span><span><CircleDollarSign size={20} /> Tope de $75.000 por evento. Podés ampliar a $150.000 utilizando 2 eventos.</span><span><ShieldCheck size={20} /> Servicio brindado por profesionales calificados de nuestra red.</span></div></div>
   </section>;
 }
+function AssistanceBlock() { return <section className="home-information assistance"><div className="assistance-heading"><div><h3>Asistencia para tu hogar 24 hs</h3><p>Estamos siempre que nos necesitás.</p></div><ShieldCheck size={30} /></div><div className="assistance-grid">{assistance.map(({ icon: Icon, title, text }) => <div className="assistance-item" key={title}><span className="assistance-icon"><Icon size={22} /></span><strong>{title}</strong><p>{text}</p></div>)}</div><div className="assistance-note"><span><CalendarDays size={20} /> Hasta 4 eventos por año calendario en cada servicio esencial.</span><span><CircleDollarSign size={20} /> Tope de $75.000 por evento. Podés ampliar a $150.000 utilizando 2 eventos.</span><span><ShieldCheck size={20} /> Servicio brindado por profesionales calificados de nuestra red.</span></div></section>; }
 
 function HomeStep({ form, setForm, onContinue, error, areaOptions, showValidation }: { form: FormState; setForm: React.Dispatch<React.SetStateAction<FormState>>; onContinue: () => void; error: string; areaOptions: number[]; showValidation: boolean }) {
   const currentArea = Number(form.squareMeters) || areaOptions[0] || 30;
@@ -231,13 +231,13 @@ function HomeQuotePage() {
     } catch (error) { setError(error instanceof Error ? error.message : "No pudimos enviar tus datos. Por favor, intentá nuevamente."); }
     finally { setSubmitting(false); }
   }
-  return <div className="page-shell"><SiteHeader /><main className="quote-main"><HomeInformation /><div className="quote-card">{step <= 3 && <Stepper current={step} />}
+  return <div className="page-shell"><SiteHeader /><main className="quote-main"><InfoIntro /><AssistanceBlock /><div className="quote-card">{step <= 3 && <Stepper current={step} />}
     {step === 1 && <HomeStep form={form} setForm={setForm} onContinue={continueToContact} error={error} areaOptions={areaOptions} showValidation={Boolean(validationAttempted[1])} />}
     {step === 2 && <ContactStep form={form} setForm={setForm} onBack={() => { setError(""); setStep(1); }} onSubmit={submitContact} error={error} submitting={submitting} showValidation={Boolean(validationAttempted[2])} />}
     {step === 3 && quote && <QuoteStep form={form} quote={quote} onBack={() => setStep(2)} onContract={startContract} />}
     {step === 4 && <ContractStep data={contract} setData={setContract} floorCategory={form.floor} onBack={() => setStep(3)} onSubmit={submitContract} error={error} submitting={submitting} showValidation={Boolean(validationAttempted[4])} />}
     {step === 5 && <ContractSuccess firstName={contract.firstName} />}
-  </div><div className="info-contact"><div><strong>¿No encontraste lo que buscabas?</strong><span>Hablá con un asesor y te ayudamos.</span></div><a href="https://wa.me/5491150625555" target="_blank" rel="noreferrer" className="button button-primary">Hablar por WhatsApp <ArrowRight size={18} /></a></div></main><SiteFooter /></div>;
+  </div><HomeInformation /><div className="info-contact"><div><strong>¿No encontraste lo que buscabas?</strong><span>Hablá con un asesor y te ayudamos.</span></div><a href="https://wa.me/5491150625555" target="_blank" rel="noreferrer" className="button button-primary">Hablar por WhatsApp <ArrowRight size={18} /></a></div></main><SiteFooter /></div>;
 }
 
 export function App() { return <HomeQuotePage />; }
