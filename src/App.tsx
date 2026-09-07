@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Building2, Check, Droplets, Flame, Home, House, KeyRound, LockKeyhole, Mail, MonitorSmartphone, ShieldCheck, Sparkles, Wrench, Tv, Pipette, UserRound, DoorOpen, Zap, Wind, Hammer, CalendarDays, CircleDollarSign } from "lucide-react";
 import { SatAIWidget } from "./SatAIWidget";
 import { SiteFooter } from "./SiteFooter";
@@ -111,17 +111,17 @@ function HomeStep({ form, setForm, onContinue, error, areaOptions, showValidatio
   </section>;
 }
 
-function ContactStep({ form, setForm, onBack, onSubmit, error, submitting, showValidation }: { form: FormState; setForm: React.Dispatch<React.SetStateAction<FormState>>; onBack: () => void; onSubmit: (event: FormEvent) => void; error: string; submitting: boolean; showValidation: boolean }) {
+function ContactStep({ form, setForm, onBack, onSubmit, error, submitting, showValidation }: { form: FormState; setForm: React.Dispatch<React.SetStateAction<FormState>>; onBack: () => void; onSubmit: () => void; error: string; submitting: boolean; showValidation: boolean }) {
   const nameInvalid = showValidation && form.name.trim().length < 3, emailInvalid = showValidation && !/^\S+@\S+\.\S+$/.test(form.email), phoneInvalid = showValidation && !validArgentinePhone(form.phone);
   return <section className="form-step" aria-labelledby="contact-title">
     <div className="section-heading"><p className="eyebrow">Ya casi terminamos</p><h1 id="contact-title">Dejanos tus datos</h1><p>Te mostraremos la cotización y guardaremos el detalle para vos.</p></div>
-    <form onSubmit={onSubmit}><div className="contact-layout"><div className="contact-fields">
+    <div className="contact-layout"><div className="contact-fields">
       <div className={`field ${nameInvalid ? "field-invalid" : ""}`}><label htmlFor="name">Nombre y apellido</label><input id="name" aria-invalid={nameInvalid} autoComplete="name" placeholder="Ej: Juan Pérez" value={form.name} onChange={e => setForm(v => ({ ...v, name: e.target.value }))} />{nameInvalid && <span className="field-message">Ingresá tu nombre y apellido.</span>}</div>
       <div className={`field ${emailInvalid ? "field-invalid" : ""}`}><label htmlFor="email">Email</label><input id="email" aria-invalid={emailInvalid} type="email" autoComplete="email" placeholder="Ej: juanperez@email.com" value={form.email} onChange={e => setForm(v => ({ ...v, email: e.target.value }))} />{emailInvalid && <span className="field-message">Ingresá un email válido.</span>}</div>
       <div className={`field ${phoneInvalid ? "field-invalid" : ""}`}><label htmlFor="phone">Teléfono</label><input id="phone" aria-invalid={phoneInvalid} type="tel" inputMode="tel" maxLength={24} autoComplete="tel" placeholder="Ej: +54 9 11 1234 5678" value={form.phone} onChange={e => setForm(v => ({ ...v, phone: cleanPhone(e.target.value) }))} />{phoneInvalid && <span className="field-message">Ingresá entre 8 y 15 números.</span>}</div>
     </div><aside className="delivery-note"><span className="delivery-icon"><Mail size={29} /></span><p>Te enviaremos el <strong>detalle de tu cotización</strong> y quedará guardada para vos.</p></aside></div>
     {error && <p className="form-error" role="alert">{error}</p>}
-    <div className="form-actions"><button className="button button-secondary" type="button" onClick={onBack} disabled={submitting}><ArrowLeft size={18} /> Volver</button><button className="button button-primary" type="submit" disabled={submitting}>{submitting ? "Guardando..." : "Ver mi cotización"} {!submitting && <ArrowRight size={19} />}</button></div></form>
+    <div className="form-actions"><button className="button button-secondary" type="button" onClick={onBack} disabled={submitting}><ArrowLeft size={18} /> Volver</button><button className="button button-primary" type="button" onClick={onSubmit} disabled={submitting}>{submitting ? "Guardando..." : "Ver mi cotización"} {!submitting && <ArrowRight size={19} />}</button></div>
   </section>;
 }
 
@@ -141,7 +141,7 @@ function QuoteStep({ form, quote, onBack, onContract }: { form: FormState; quote
   </section>;
 }
 
-function ContractStep({ data, setData, floorCategory, onBack, onSubmit, error, submitting, showValidation }: { data: ContractState; setData: React.Dispatch<React.SetStateAction<ContractState>>; floorCategory: string; onBack: () => void; onSubmit: (event: FormEvent) => void; error: string; submitting: boolean; showValidation: boolean }) {
+function ContractStep({ data, setData, floorCategory, onBack, onSubmit, error, submitting, showValidation }: { data: ContractState; setData: React.Dispatch<React.SetStateAction<ContractState>>; floorCategory: string; onBack: () => void; onSubmit: () => void; error: string; submitting: boolean; showValidation: boolean }) {
   const field = (key: keyof ContractState) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setData((current) => ({ ...current, [key]: event.target.value }));
   const invalid: Partial<Record<keyof ContractState, boolean>> = showValidation ? { firstName: !data.firstName, lastName: !data.lastName, dni: data.dni.length < 6, dateOfBirth: !data.dateOfBirth, address: data.address.length < 3, floor: !validExactFloor(floorCategory, data.floor), postalCode: data.postalCode.length < 4, email: !/^\S+@\S+\.\S+$/.test(data.email), phone: !validArgentinePhone(data.phone) } : {};
   const fieldClass = (key: keyof ContractState, extra = "") => `field ${extra} ${invalid[key] ? "field-invalid" : ""}`.trim();
@@ -149,7 +149,7 @@ function ContractStep({ data, setData, floorCategory, onBack, onSubmit, error, s
   return <section className="form-step contract-step" aria-labelledby="contract-title">
     <div className="section-heading"><p className="eyebrow">Solicitud de contratación</p><h1 id="contract-title">Completá tus datos</h1><p>Usaremos esta información para preparar la emisión de tu seguro.</p></div>
     <div className="contract-security"><ShieldCheck size={20} /><span>Tus datos están protegidos. Todavía no te pediremos ningún medio de pago.</span></div>
-    <form onSubmit={onSubmit}>
+    <div>
       <div className="contract-fields">
         <div className={fieldClass("firstName")}><label htmlFor="contract-first-name">Nombre</label><input id="contract-first-name" aria-invalid={invalid.firstName} autoComplete="given-name" value={data.firstName} onChange={field("firstName")} />{message("firstName")}</div>
         <div className={fieldClass("lastName")}><label htmlFor="contract-last-name">Apellido</label><input id="contract-last-name" aria-invalid={invalid.lastName} autoComplete="family-name" value={data.lastName} onChange={field("lastName")} />{message("lastName")}</div>
@@ -163,8 +163,8 @@ function ContractStep({ data, setData, floorCategory, onBack, onSubmit, error, s
         <div className={fieldClass("phone")}><label htmlFor="contract-phone">Celular</label><input id="contract-phone" aria-invalid={invalid.phone} type="tel" inputMode="tel" maxLength={24} autoComplete="tel" placeholder="Ej: 11 5062 5555" value={data.phone} onChange={event => setData(current => ({ ...current, phone: cleanPhone(event.target.value) }))} />{message("phone", "Ingresá entre 8 y 15 números.")}</div>
       </div>
       {error && <p className="form-error" role="alert">{error}</p>}
-      <div className="form-actions"><button className="button button-secondary" type="button" onClick={onBack} disabled={submitting}><ArrowLeft size={18} /> Volver</button><button className="button button-primary" type="submit" disabled={submitting}>{submitting ? "Enviando..." : "Enviar mis datos para contratar"} {!submitting && <ArrowRight size={19} />}</button></div>
-    </form>
+      <div className="form-actions"><button className="button button-secondary" type="button" onClick={onBack} disabled={submitting}><ArrowLeft size={18} /> Volver</button><button className="button button-primary" type="button" onClick={onSubmit} disabled={submitting}>{submitting ? "Enviando..." : "Enviar mis datos para contratar"} {!submitting && <ArrowRight size={19} />}</button></div>
+    </div>
   </section>;
 }
 
@@ -183,8 +183,7 @@ function HomeQuotePage() {
   const revealErrors = (validationStep: number) => { setValidationAttempted(current => ({ ...current, [validationStep]: true })); window.setTimeout(() => document.querySelector(".field-invalid")?.scrollIntoView({ behavior: "smooth", block: "center" }), 0); };
   useEffect(() => { void fetch(`${API_URL}/leads/home/options`).then(response => response.ok ? response.json() : Promise.reject()).then(data => { const options = Array.isArray(data.options) ? data.options.filter((value: unknown) => typeof value === "number") : []; if (!options.length) throw new Error(); setAreaOptions(options); setForm(current => ({ ...current, squareMeters: String(options[0]) })); }).catch(() => setError("No pudimos cargar el tarifario. Por favor, intentá nuevamente.")); }, []);
   function continueToContact() { const area = Number(form.squareMeters); if (!/^\d{4}$/.test(form.postalCode) || !form.floor || !areaOptions.includes(area)) { revealErrors(1); setError("Completá los campos marcados para continuar."); return; } trackLandingEvent("cotizador_continuar", { step: 1, home_type: form.homeType, floor: form.floor }); setError(""); setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }
-  async function submitContact(event: FormEvent) {
-    event.preventDefault();
+  async function submitContact() {
     if (form.name.trim().length < 3 || !/^\S+@\S+\.\S+$/.test(form.email) || !validArgentinePhone(form.phone)) { revealErrors(2); setError("Completá los campos marcados para continuar."); return; }
     const squareMeters = Number(form.squareMeters);
     trackLandingEvent("cotizador_ver_cotizacion", { step: 2, home_type: form.homeType, floor: form.floor, square_meters: squareMeters });
@@ -220,8 +219,7 @@ function HomeQuotePage() {
     setContract({ firstName, lastName: lastNameParts.join(" "), dni: "", dateOfBirth: "", address: "", floor: form.floor === "Segundo piso o superior" ? "" : form.floor, apartment: "", postalCode: form.postalCode, email: form.email, phone: form.phone });
     setError(""); setStep(4); window.scrollTo({ top: 0, behavior: "smooth" });
   }
-  async function submitContract(event: FormEvent) {
-    event.preventDefault();
+  async function submitContract() {
     if (!contract.firstName || !contract.lastName || contract.dni.length < 6 || !contract.dateOfBirth || contract.address.length < 3 || !validExactFloor(form.floor, contract.floor) || contract.postalCode.length < 4 || !/^\S+@\S+\.\S+$/.test(contract.email) || !validArgentinePhone(contract.phone)) { revealErrors(4); setError("Completá los campos marcados para continuar."); return; }
     setError(""); setSubmitting(true);
     try {
@@ -230,6 +228,7 @@ function HomeQuotePage() {
         const detail = await response.json().catch(() => null) as { error?: string } | null;
         throw new Error(detail?.error || "No pudimos actualizar la solicitud");
       }
+      trackLandingEvent("cotizador_datos_contratacion_enviados", { step: 4, home_type: form.homeType, square_meters: Number(form.squareMeters) });
       setStep(5); window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) { setError(error instanceof Error ? error.message : "No pudimos enviar tus datos. Por favor, intentá nuevamente."); }
     finally { setSubmitting(false); }
