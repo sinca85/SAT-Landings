@@ -76,7 +76,7 @@ const assistance = [
   { icon: Wrench, title: "Mantenimiento", text: "Arreglos cotidianos, instalaciones de artefactos y más." },
 ];
 
-function InfoIntro() { return <section className="home-information info-intro" aria-label="Información del seguro de hogar"><div className="info-heading"><p className="eyebrow">Información para decidir tranquilo</p><h2>Todo lo que querés saber sobre tu seguro</h2><p>Respondemos las dudas más comunes para que tengas toda la información en un solo lugar.</p><SatAIWidget slug="allianz-hogar" /></div></section>; }
+function InfoIntro() { return <section className="home-information info-intro" aria-label="Información del seguro de hogar"><div className="info-heading"><p className="eyebrow">Información para decidir tranquilo</p><h2>Todo lo que querés saber sobre tu seguro</h2><p>Respondemos las dudas más comunes para que tengas toda la información en un solo lugar.</p><SatAIWidget slug="allianz-hogar" hideTitle placeholder={'¿Qué querés saber? Ej: "¿Me cubre si se rompe la heladera?"'} /></div></section>; }
 function HomeInformation() {
   return <section className="home-information info-details" aria-label="Coberturas y situaciones del seguro de hogar">
     <div className="info-tabs" aria-label="Temas principales">{[[ShieldCheck, "Coberturas"], [MonitorSmartphone, "Electrodomésticos"], [LockKeyhole, "Robo"], [Droplets, "Daños por agua y cristales"], [Wrench, "Asistencia 24 hs"], [Mail, "Contratación y siniestros"]].map(([Icon, label]) => <span key={String(label)}><Icon size={21} />{label as string}</span>)}</div>
