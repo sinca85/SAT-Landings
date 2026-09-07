@@ -231,13 +231,13 @@ function HomeQuotePage() {
     } catch (error) { setError(error instanceof Error ? error.message : "No pudimos enviar tus datos. Por favor, intentá nuevamente."); }
     finally { setSubmitting(false); }
   }
-  return <div className="page-shell"><SiteHeader /><main className="quote-main"><InfoIntro /><AssistanceBlock /><div className="quote-card">{step <= 3 && <Stepper current={step} />}
+  return <div className="page-shell"><SiteHeader /><main className="quote-main"><div className="quote-card">{step <= 3 && <Stepper current={step} />}
     {step === 1 && <HomeStep form={form} setForm={setForm} onContinue={continueToContact} error={error} areaOptions={areaOptions} showValidation={Boolean(validationAttempted[1])} />}
     {step === 2 && <ContactStep form={form} setForm={setForm} onBack={() => { setError(""); setStep(1); }} onSubmit={submitContact} error={error} submitting={submitting} showValidation={Boolean(validationAttempted[2])} />}
     {step === 3 && quote && <QuoteStep form={form} quote={quote} onBack={() => setStep(2)} onContract={startContract} />}
     {step === 4 && <ContractStep data={contract} setData={setContract} floorCategory={form.floor} onBack={() => setStep(3)} onSubmit={submitContract} error={error} submitting={submitting} showValidation={Boolean(validationAttempted[4])} />}
     {step === 5 && <ContractSuccess firstName={contract.firstName} />}
-  </div><HomeInformation /><div className="info-contact"><div><strong>¿No encontraste lo que buscabas?</strong><span>Hablá con un asesor y te ayudamos.</span></div><a href="https://wa.me/5491150625555" target="_blank" rel="noreferrer" className="button button-primary">Hablar por WhatsApp <ArrowRight size={18} /></a></div></main><SiteFooter /></div>;
+  </div><InfoIntro /><AssistanceBlock /><HomeInformation /><div className="info-contact"><div><strong>¿No encontraste lo que buscabas?</strong><span>Hablá con un asesor y te ayudamos.</span></div><a href="https://wa.me/5491150625555" target="_blank" rel="noreferrer" className="button button-primary">Hablar por WhatsApp <ArrowRight size={18} /></a></div></main><SiteFooter /></div>;
 }
 
 export function App() { return <HomeQuotePage />; }
