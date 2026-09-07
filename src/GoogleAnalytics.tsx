@@ -23,25 +23,14 @@ export function GoogleAnalytics() {
         window.dataLayer = window.dataLayer || [];
         window.gtag = window.gtag || function gtag(...args: unknown[]) { window.dataLayer?.push(args); };
         window.gtag("js", new Date());
-        const configureAndTrackPage = () => {
-          window.gtag?.("config", measurementId, { send_page_view: false });
-          // Google procesa la configuración del contenedor de forma asíncrona.
-          // El breve diferimiento garantiza que el evento use la medición ya inicializada.
-          window.setTimeout(() => {
-            window.gtag?.("event", "page_view", { page_title: document.title, page_location: window.location.href });
-          }, 100);
-        };
-        const existingScript = document.querySelector(`script[data-sat-ga="${measurementId}"]`);
-        if (!existingScript) {
+        if (!document.querySelector(`script[data-sat-ga="${measurementId}"]`)) {
           const script = document.createElement("script");
           script.async = true;
           script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`;
           script.dataset.satGa = measurementId;
-          script.addEventListener("load", configureAndTrackPage, { once: true });
           document.head.appendChild(script);
-        } else {
-          configureAndTrackPage();
         }
+        window.gtag("config", measurementId);
       })
       .catch(() => undefined);
     return () => { cancelled = true; };
