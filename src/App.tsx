@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Building2, Check, Droplets, Flame, Home, House, KeyRound, LockKeyhole, Mail, MonitorSmartphone, ShieldCheck, Sparkles, Wrench, Tv, Pipette, UserRound, DoorOpen, Zap, Wind, Hammer, CalendarDays, CircleDollarSign } from "lucide-react";
 import { SatAIWidget } from "./SatAIWidget";
 import { SiteFooter } from "./SiteFooter";
-import { GoogleAnalytics } from "./GoogleAnalytics";
+import { GoogleAnalytics, trackLandingEvent } from "./GoogleAnalytics";
 
 type HomeType = "Casa" | "Departamento" | "PH" | "Barrio privado";
 type FormState = { postalCode: string; homeType: HomeType; floor: string; squareMeters: string; name: string; email: string; phone: string };
@@ -182,11 +182,12 @@ function HomeQuotePage() {
   const submissionId = useRef(crypto.randomUUID());
   const revealErrors = (validationStep: number) => { setValidationAttempted(current => ({ ...current, [validationStep]: true })); window.setTimeout(() => document.querySelector(".field-invalid")?.scrollIntoView({ behavior: "smooth", block: "center" }), 0); };
   useEffect(() => { void fetch(`${API_URL}/leads/home/options`).then(response => response.ok ? response.json() : Promise.reject()).then(data => { const options = Array.isArray(data.options) ? data.options.filter((value: unknown) => typeof value === "number") : []; if (!options.length) throw new Error(); setAreaOptions(options); setForm(current => ({ ...current, squareMeters: String(options[0]) })); }).catch(() => setError("No pudimos cargar el tarifario. Por favor, intentá nuevamente.")); }, []);
-  function continueToContact() { const area = Number(form.squareMeters); if (!/^\d{4}$/.test(form.postalCode) || !form.floor || !areaOptions.includes(area)) { revealErrors(1); setError("Completá los campos marcados para continuar."); return; } setError(""); setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  function continueToContact() { const area = Number(form.squareMeters); if (!/^\d{4}$/.test(form.postalCode) || !form.floor || !areaOptions.includes(area)) { revealErrors(1); setError("Completá los campos marcados para continuar."); return; } trackLandingEvent("cotizador_continuar", { step: 1, home_type: form.homeType, floor: form.floor }); setError(""); setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }
   async function submitContact(event: FormEvent) {
     event.preventDefault();
     if (form.name.trim().length < 3 || !/^\S+@\S+\.\S+$/.test(form.email) || !validArgentinePhone(form.phone)) { revealErrors(2); setError("Completá los campos marcados para continuar."); return; }
     const squareMeters = Number(form.squareMeters);
+    trackLandingEvent("cotizador_ver_cotizacion", { step: 2, home_type: form.homeType, floor: form.floor, square_meters: squareMeters });
     setError(""); setSubmitting(true);
     try {
       const params = new URLSearchParams(window.location.search);
@@ -214,6 +215,7 @@ function HomeQuotePage() {
     } finally { setSubmitting(false); }
   }
   function startContract() {
+    trackLandingEvent("cotizador_quiero_contratar", { step: 3, home_type: form.homeType });
     const [firstName = "", ...lastNameParts] = form.name.trim().split(/\s+/);
     setContract({ firstName, lastName: lastNameParts.join(" "), dni: "", dateOfBirth: "", address: "", floor: form.floor === "Segundo piso o superior" ? "" : form.floor, apartment: "", postalCode: form.postalCode, email: form.email, phone: form.phone });
     setError(""); setStep(4); window.scrollTo({ top: 0, behavior: "smooth" });
