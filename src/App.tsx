@@ -186,9 +186,12 @@ function HomeQuotePage() {
     setError(""); setSubmitting(true);
     try {
       const response = await fetch(`${API_URL}/leads/home/${leadId}/contract`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ submissionId: submissionId.current, ...contract }) });
-      if (!response.ok) throw new Error("No pudimos actualizar la solicitud");
+      if (!response.ok) {
+        const detail = await response.json().catch(() => null) as { error?: string } | null;
+        throw new Error(detail?.error || "No pudimos actualizar la solicitud");
+      }
       setStep(5); window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch { setError("No pudimos enviar tus datos. Por favor, intentá nuevamente."); }
+    } catch (error) { setError(error instanceof Error ? error.message : "No pudimos enviar tus datos. Por favor, intentá nuevamente."); }
     finally { setSubmitting(false); }
   }
   return <div className="page-shell"><SiteHeader /><main className="quote-main"><SatAIWidget slug="allianz-hogar" /><div className="quote-card">{step <= 3 && <Stepper current={step} />}
