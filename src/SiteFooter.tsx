@@ -77,8 +77,8 @@ export function SiteFooter() {
       {(emails.length > 0 || whatsapps.length > 0 || addresses.length > 0) && <section className="site-footer__section">
         <h2>Contacto</h2>
         <ul className="site-footer__contact-list">
-          {whatsapps.map((entry) => <li key={entry.slug}><MessageCircle aria-hidden="true" size={18} /><a href={whatsappUrl(entry.value)} target="_blank" rel="noreferrer">{entry.label || entry.value}</a></li>)}
-          {emails.map((entry) => <li key={entry.slug}><Mail aria-hidden="true" size={18} /><a href={`mailto:${entry.value}`}>{entry.label || entry.value}</a></li>)}
+          {whatsapps.map((entry) => <li key={entry.slug}><MessageCircle aria-hidden="true" size={18} /><a href={whatsappUrl(entry.value)} target="_blank" rel="noreferrer">{entry.value}</a></li>)}
+          {emails.map((entry) => <li key={entry.slug}><Mail aria-hidden="true" size={18} /><a href={`mailto:${entry.value}`}>{entry.value}</a></li>)}
           {addresses.map((entry) => <li key={entry.slug}><MapPin aria-hidden="true" size={18} /><a href={mapsUrl(entry.value)} target="_blank" rel="noreferrer">{entry.value}</a></li>)}
         </ul>
       </section>}
