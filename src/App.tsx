@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Building2, Check, Droplets, Flame, Home, House, KeyRound, LockKeyhole, Mail, MonitorSmartphone, ShieldCheck, Sparkles, Wrench, Tv, Pipette, UserRound, DoorOpen, Zap, Wind, Hammer, CalendarDays, CircleDollarSign } from "lucide-react";
 import { SatAIWidget } from "./SatAIWidget";
 import { SiteFooter } from "./SiteFooter";
-import { GoogleAnalytics, trackLandingEvent } from "./GoogleAnalytics";
+import { trackLandingEvent } from "./GoogleAnalytics";
 
 type HomeType = "Casa" | "Departamento" | "PH" | "Barrio privado";
 type FormState = { postalCode: string; homeType: HomeType; floor: string; squareMeters: string; name: string; email: string; phone: string };
@@ -243,4 +243,4 @@ function HomeQuotePage() {
   </div><InfoIntro /><AssistanceBlock /><HomeInformation /><div className="info-contact"><div><strong>¿No encontraste lo que buscabas?</strong><span>Hablá con un asesor y te ayudamos.</span></div><a href="https://wa.me/5491150625555" target="_blank" rel="noreferrer" className="button button-primary">Hablar por WhatsApp <ArrowRight size={18} /></a></div></main><SiteFooter /></div>;
 }
 
-export function App() { return <><GoogleAnalytics /><HomeQuotePage /></>; }
+export function App() { return <HomeQuotePage />; }
