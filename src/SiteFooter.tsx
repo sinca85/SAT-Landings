@@ -58,7 +58,7 @@ export function SiteFooter() {
   }, []);
 
   const { emails, whatsapps, addresses, socialLinks } = useMemo(() => ({
-    emails: entries.filter((entry) => entry.type === "email"),
+    emails: entries.filter((entry, index, all) => entry.type === "email" && all.findIndex((candidate) => candidate.type === "email" && candidate.value.trim().toLowerCase() === entry.value.trim().toLowerCase()) === index),
     whatsapps: entries.filter((entry) => entry.type === "whatsapp"),
     addresses: entries.filter((entry) => entry.type === "direccion"),
     socialLinks: entries.filter((entry) => entry.type === "red_social"),
