@@ -51,7 +51,7 @@ function Stepper({ current }: { current: number }) {
 
 function SiteHeader() {
   return <header className="site-header"><div className="header-inner">
-    <a href="https://seguroatiempo.com/" aria-label="Seguro a Tiempo, inicio"><img src="/assets/logo-seguro-a-tiempo.svg" alt="Seguro a Tiempo" className="brand-logo" /></a>
+    <a href="https://seguroatiempo.com/hogar" aria-label="Seguro a Tiempo, inicio"><img src="/assets/logo-seguro-a-tiempo.svg" alt="Seguro a Tiempo" className="brand-logo" /></a>
     <div className="secure-label"><ShieldCheck size={19} /> Cotización <strong>100% segura</strong></div>
   </div></header>;
 }

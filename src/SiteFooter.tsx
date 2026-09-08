@@ -67,7 +67,7 @@ export function SiteFooter() {
   return <footer className="site-footer" aria-label="Información de contacto">
     <div className="site-footer__inner">
       <div className="site-footer__brand">
-        <a href="https://seguroatiempo.com/" aria-label="Seguro a Tiempo, inicio">
+        <a href="https://seguroatiempo.com/hogar" aria-label="Seguro a Tiempo, inicio">
           <img src="/assets/logo-seguro-a-tiempo.svg" alt="Seguro a Tiempo" />
         </a>
         <img className="site-footer__ssn" src="/assets/ssn-logo.png" alt="Superintendencia de Seguros de la Nación" />
