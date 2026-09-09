@@ -189,6 +189,7 @@ function HomeQuotePage() {
   const [contract, setContract] = useState<ContractState>({ firstName: "", lastName: "", dni: "", dateOfBirth: "", address: "", floor: "", apartment: "", postalCode: "", email: "", phone: "" });
   const [validationAttempted, setValidationAttempted] = useState<Record<number, boolean>>({});
   const submissionId = useRef(crypto.randomUUID());
+  const contractEventTracked = useRef(false);
   const revealErrors = (validationStep: number) => { setValidationAttempted(current => ({ ...current, [validationStep]: true })); window.setTimeout(() => document.querySelector(".field-invalid")?.scrollIntoView({ behavior: "smooth", block: "center" }), 0); };
   useEffect(() => { void fetch(`${API_URL}/leads/home/options`).then(response => response.ok ? response.json() : Promise.reject()).then(data => { const options = Array.isArray(data.options) ? data.options.filter((value: unknown) => typeof value === "number") : []; if (!options.length) throw new Error(); setAreaOptions(options); setForm(current => ({ ...current, squareMeters: String(options[0]) })); }).catch(() => setError("No pudimos cargar el tarifario. Por favor, intentá nuevamente.")); }, []);
   function continueToContact() { const area = Number(form.squareMeters); if (!/^\d{4}$/.test(form.postalCode) || (form.homeType === "Departamento" && !form.floor) || !areaOptions.includes(area)) { revealErrors(1); setError("Completá los campos marcados para continuar."); return; } trackLandingEvent("cotizador_continuar", { step: 1, home_type: form.homeType, floor: form.floor }); setError(""); setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }
@@ -232,6 +233,12 @@ function HomeQuotePage() {
   async function submitContract(event: FormEvent) {
     event.preventDefault();
     if (!contract.firstName || !contract.lastName || contract.dni.length < 6 || contract.dni.length > 8 || !contract.dateOfBirth || contract.address.length < 3 || (form.homeType === "Departamento" && !validExactFloor(form.floor, contract.floor)) || contract.postalCode.length < 4 || !/^\S+@\S+\.\S+$/.test(contract.email) || !validArgentinePhone(contract.phone)) { revealErrors(4); setError("Completá los campos marcados para continuar."); return; }
+    // Medimos la solicitud en el instante en que el formulario final ya fue validado.
+    // No depende de la respuesta de la API y se registra una sola vez por cotización.
+    if (!contractEventTracked.current) {
+      contractEventTracked.current = true;
+      trackLandingEvent("cotizador_solicitud_contratacion", { step: 4, home_type: form.homeType, square_meters: quote?.quotedSquareMeters });
+    }
     setError(""); setSubmitting(true);
     try {
       const response = await fetch(`${API_URL}/leads/home/${leadId}/contract`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ submissionId: submissionId.current, ...contract }) });
@@ -239,7 +246,6 @@ function HomeQuotePage() {
         const detail = await response.json().catch(() => null) as { error?: string } | null;
         throw new Error(detail?.error || "No pudimos actualizar la solicitud");
       }
-      trackLandingEvent("cotizador_solicitud_contratacion", { step: 4, home_type: form.homeType, square_meters: quote?.quotedSquareMeters });
       setStep(5); window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) { setError(error instanceof Error ? error.message : "No pudimos enviar tus datos. Por favor, intentá nuevamente."); }
     finally { setSubmitting(false); }
