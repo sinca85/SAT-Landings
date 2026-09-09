@@ -239,6 +239,7 @@ function HomeQuotePage() {
         const detail = await response.json().catch(() => null) as { error?: string } | null;
         throw new Error(detail?.error || "No pudimos actualizar la solicitud");
       }
+      trackLandingEvent("cotizador_solicitud_contratacion", { step: 4, home_type: form.homeType, square_meters: quote?.quotedSquareMeters });
       setStep(5); window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) { setError(error instanceof Error ? error.message : "No pudimos enviar tus datos. Por favor, intentá nuevamente."); }
     finally { setSubmitting(false); }
