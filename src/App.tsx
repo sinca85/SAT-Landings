@@ -105,7 +105,7 @@ function HomeStep({ form, setForm, onContinue, error, areaOptions, showValidatio
     if (nextValue !== undefined) setForm((value) => ({ ...value, squareMeters: String(nextValue) }));
   };
   return <section className="form-step" aria-labelledby="home-title">
-    <div className="section-heading"><p className="eyebrow">Cotizá online en minutos</p><h1 id="home-title">Contanos sobre tu hogar</h1><p>Así podemos encontrar una cobertura pensada para vos.</p></div>
+    <div className="section-heading"><p className="eyebrow">Cotizá online en 1 minuto</p><h1 id="home-title">Contanos sobre tu hogar</h1><p>Así podemos encontrar una cobertura pensada para vos.</p></div>
     <div className="fields-grid">
       <div className={`field ${postalInvalid ? "field-invalid" : ""}`}><label htmlFor="postal-code">Código postal</label><input id="postal-code" aria-invalid={postalInvalid} inputMode="numeric" maxLength={4} placeholder="Ej: 1425" value={form.postalCode} onChange={e => setForm(v => ({ ...v, postalCode: e.target.value.replace(/\D/g, "") }))} />{postalInvalid && <span className="field-message">Ingresá un código postal de 4 números.</span>}</div>
       <fieldset className="field home-type-field"><legend>Tipo de vivienda</legend><div className="home-types">
