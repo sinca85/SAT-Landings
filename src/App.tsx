@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Building2, Check, Droplets, Flame, Home, House, KeyRound, LockKeyhole, Mail, MonitorSmartphone, ShieldCheck, Sparkles, Wrench, Tv, Pipette, UserRound, DoorOpen, Zap, Wind, Hammer, CalendarDays, CircleDollarSign, Phone, CreditCard, MessageCircle } from "lucide-react";
 import { SiteFooter } from "./SiteFooter";
-import { trackLandingEvent } from "./GoogleAnalytics";
+import { trackLandingEvent, trackMetaEvent, TrackingScripts } from "./GoogleAnalytics";
 import { SatAIWidget } from "./SatAIWidget";
 
 type HomeType = "Casa" | "Departamento" | "PH" | "Barrio privado";
@@ -192,12 +192,13 @@ function HomeQuotePage() {
   const contractEventTracked = useRef(false);
   const revealErrors = (validationStep: number) => { setValidationAttempted(current => ({ ...current, [validationStep]: true })); window.setTimeout(() => document.querySelector(".field-invalid")?.scrollIntoView({ behavior: "smooth", block: "center" }), 0); };
   useEffect(() => { void fetch(`${API_URL}/leads/home/options?homeType=${encodeURIComponent(form.homeType)}`).then(response => response.ok ? response.json() : Promise.reject()).then(data => { const options = Array.isArray(data.options) ? data.options.filter((value: unknown) => typeof value === "number") : []; if (!options.length) throw new Error(); setAreaOptions(options); setForm(current => ({ ...current, squareMeters: options.includes(Number(current.squareMeters)) ? current.squareMeters : String(options[0]) })); }).catch(() => setError("No pudimos cargar el tarifario. Por favor, intentá nuevamente.")); }, [form.homeType]);
-  function continueToContact() { const area = Number(form.squareMeters); if (!/^\d{4}$/.test(form.postalCode) || (form.homeType === "Departamento" && !form.floor) || !areaOptions.includes(area)) { revealErrors(1); setError("Completá los campos marcados para continuar."); return; } trackLandingEvent("cotizador_continuar", { step: 1, home_type: form.homeType, floor: form.floor }); setError(""); setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  function continueToContact() { const area = Number(form.squareMeters); if (!/^\d{4}$/.test(form.postalCode) || (form.homeType === "Departamento" && !form.floor) || !areaOptions.includes(area)) { revealErrors(1); setError("Completá los campos marcados para continuar."); return; } trackLandingEvent("cotizador_continuar", { step: 1, home_type: form.homeType, floor: form.floor }); trackMetaEvent("Lead", { step: 1, event_stage: "step_1_completed" }); setError(""); setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }
   async function submitContact(event: FormEvent) {
     event.preventDefault();
     if (form.name.trim().length < 3 || !/^\S+@\S+\.\S+$/.test(form.email)) { revealErrors(2); setError("Completá los campos marcados para continuar."); return; }
     const squareMeters = Number(form.squareMeters);
     trackLandingEvent("cotizador_ver_cotizacion", { step: 2, home_type: form.homeType, floor: form.floor, square_meters: squareMeters });
+    trackMetaEvent("Lead", { step: 2, event_stage: "quote_generated", value: squareMeters });
     setError(""); setSubmitting(true);
     try {
       const params = new URLSearchParams(window.location.search);
@@ -226,6 +227,7 @@ function HomeQuotePage() {
   }
   function startContract() {
     trackLandingEvent("cotizador_quiero_contratar", { step: 3, home_type: form.homeType });
+    trackMetaEvent("CustomizeProduct", { step: 3, event_stage: "want_to_contract" });
     const [firstName = "", ...lastNameParts] = form.name.trim().split(/\s+/);
     setContract({ firstName, lastName: lastNameParts.join(" "), dni: "", dateOfBirth: "", address: "", floor: form.floor === "Segundo piso o superior" ? "" : form.floor, apartment: "", postalCode: form.postalCode, email: form.email, phone: "" });
     setError(""); setStep(4); window.scrollTo({ top: 0, behavior: "smooth" });
@@ -238,6 +240,7 @@ function HomeQuotePage() {
     if (!contractEventTracked.current) {
       contractEventTracked.current = true;
       trackLandingEvent("cotizador_solicitud_contratacion", { step: 4, home_type: form.homeType, square_meters: quote?.quotedSquareMeters });
+      trackMetaEvent("CompleteRegistration", { step: 4, event_stage: "contract_request" });
     }
     setError(""); setSubmitting(true);
     try {
@@ -261,4 +264,4 @@ function HomeQuotePage() {
   </div>{step <= 3 && <><InfoIntro /><HomeInformation /><AssistanceBlock /><div className="info-contact"><div><strong>¿No encontraste lo que buscabas?</strong><span>Hablá con un asesor y te ayudamos.</span></div><a href={whatsappUrl} target="_blank" rel="noreferrer" className="button button-primary">Hablar por WhatsApp <ArrowRight size={18} /></a></div></>}</main><SiteFooter /></div>;
 }
 
-export function App() { return <HomeQuotePage />; }
+export function App() { return <><TrackingScripts /><HomeQuotePage /></>; }
