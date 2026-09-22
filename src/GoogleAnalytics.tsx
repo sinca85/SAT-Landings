@@ -16,7 +16,7 @@ export function trackMetaEvent(eventName: string, parameters: Record<string, unk
   const payload = { ...utmParams(), campaign: "Allianz Hogar", source: "landing", ...parameters };
   if (!window.fbq) { console.info(`[Seguro a Tiempo][Meta] Evento en cola: ${eventName}`, payload); return; }
   console.info(`[Seguro a Tiempo][Meta] Evento enviado: ${eventName}`, payload);
-  window.fbq(eventName, payload);
+  window.fbq("track", eventName, payload);
 }
 
 export function TrackingScripts() {
