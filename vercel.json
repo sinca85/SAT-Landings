@@ -1,5 +1,16 @@
 {
   "rewrites": [
-    { "source": "/hogar", "destination": "/" }
+    {
+      "source": "/hogar",
+      "destination": "/"
+    },
+    {
+      "source": "/auto",
+      "destination": "/auto/index.html"
+    },
+    {
+      "source": "/auto/",
+      "destination": "/auto/index.html"
+    }
   ]
 }
