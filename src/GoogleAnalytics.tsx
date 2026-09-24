@@ -6,14 +6,14 @@ declare global {
 
 const utmParams = () => { const params = new URLSearchParams(window.location.search); return { utm_source: params.get("utm_source") || undefined, utm_campaign: params.get("utm_campaign") || undefined, utm_content: params.get("utm_content") || undefined, utm_medium: params.get("utm_medium") || undefined, utm_term: params.get("utm_term") || undefined }; };
 export function trackLandingEvent(eventName: string, parameters: Record<string, unknown> = {}) {
-  const payload = { campaign: "Allianz Hogar", source: "landing", ...utmParams(), ...parameters };
+  const payload = { ...utmParams(), ...parameters };
   console.info(`[Seguro a Tiempo][GA4] Evento enviado: ${eventName}`, payload);
   if (window.gtag) window.gtag("event", eventName, payload);
   else { window.dataLayer = window.dataLayer || []; window.dataLayer.push(["event", eventName, payload]); }
 }
 
 export function trackMetaEvent(eventName: string, parameters: Record<string, unknown> = {}) {
-  const payload = { ...utmParams(), campaign: "Allianz Hogar", source: "landing", ...parameters };
+  const payload = { ...utmParams(), ...parameters };
   if (!window.fbq) { console.info(`[Seguro a Tiempo][Meta] Evento en cola: ${eventName}`, payload); return; }
   console.info(`[Seguro a Tiempo][Meta] Evento enviado: ${eventName}`, payload);
   window.fbq("track", eventName, payload);
