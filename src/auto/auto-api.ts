@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 export const AUTO_API_URL = `${import.meta.env.VITE_API_URL || "https://api.seguroatiempo.com"}/api/auto`;
 export type Option = { value: string; label: string };
-export type AutoConfig = { ready: boolean; environment: "test"; personType: string; analytics: { enabled: boolean; measurementId?: string; metaPixelId?: string } };
+export type AutoConfig = { ready: boolean; environment: "test"; mode: "demo" | "galeno"; personType: string; analytics: { enabled: boolean; measurementId?: string; metaPixelId?: string } };
 export type AutoQuote = { environment: "test"; requestId: string; vehicle: string; insuredAmount: number | null; hasRestrictions: boolean; billing: { mode: string; condition: string; method: string }; coverages: { code: string; name: string; premium: number; firstInstallment: number; remainingInstallment: number; benefits: string[]; deductible: string }[] };
 export async function autoRequest<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${AUTO_API_URL}${path}`, { ...init, cache: "no-store" });
