@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { trackLandingEvent } from "./GoogleAnalytics";
 
-interface SatAIWidgetProps { slug: string; apiUrl?: string; className?: string; hideTitle?: boolean; placeholder?: string }
+interface SatAIWidgetProps { slug: string; apiUrl?: string; className?: string; hideTitle?: boolean; placeholder?: string; heading?: string; subtitle?: string; suggestedQuestions?: string[] }
 interface WidgetConfig { title?: string; placeholder?: string; welcomeMessage?: string; active: boolean }
 interface ChatResponse { success: boolean; answer?: string; sources?: Array<{ document: string; page?: number }>; error?: string }
 
@@ -21,7 +21,7 @@ function renderTextWithLinks(value: string): ReactNode[] {
   return nodes.length ? nodes : [value];
 }
 
-export function SatAIWidget({ slug, apiUrl = "https://api.seguroatiempo.com", className = "", hideTitle = false, placeholder }: SatAIWidgetProps) {
+export function SatAIWidget({ slug, apiUrl = "https://api.seguroatiempo.com", className = "", hideTitle = false, placeholder, heading, subtitle, suggestedQuestions = [] }: SatAIWidgetProps) {
   const [config, setConfig] = useState<WidgetConfig | null>(null);
   const [question, setQuestion] = useState("");
   const [result, setResult] = useState<ChatResponse | null>(null);
@@ -30,5 +30,5 @@ export function SatAIWidget({ slug, apiUrl = "https://api.seguroatiempo.com", cl
   if (!config) return null;
   const ask = async () => { if (!question.trim() || loading) return; setLoading(true); setResult(null); try { const response = await fetch(`${apiUrl}/api/ai/chat/${encodeURIComponent(slug)}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question: question.trim() }) }); setResult(await response.json() as ChatResponse); } catch { setResult({ success: false, error: "No pudimos consultar en este momento." }); } finally { setLoading(false); } };
   const askTracked = () => { if (question.trim()) trackLandingEvent("asistente_preguntar", { question: question.trim(), assistant: slug }); void ask(); };
-  return <section className={`sat-ai-widget ${className}`} aria-label={config.title || "Asistente"}>{!hideTitle && config.title && <h2>{config.title}</h2>}<div className="sat-ai-form"><input value={question} maxLength={500} placeholder={placeholder || config.placeholder || "¿Qué querés saber?"} onChange={(event) => setQuestion(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") askTracked(); }} /><button type="button" disabled={!question.trim() || loading} onClick={askTracked}>{loading ? "Consultando..." : "Preguntar"}</button></div>{result && <div className="sat-ai-result" role="status">{renderTextWithLinks(result.error || result.answer || "")}<button type="button" className="sat-ai-new" onClick={() => { setQuestion(""); setResult(null); }}>Nueva consulta</button></div>}</section>;
+  return <section className={`sat-ai-widget ${className}`} aria-label={heading || config.title || "Asistente"}>{heading && <div className="sat-ai-heading"><span aria-hidden="true">🤖</span><div><h2>{heading}</h2>{subtitle && <p>{subtitle}</p>}</div></div>}{!heading && !hideTitle && config.title && <h2>{config.title}</h2>}<div className="sat-ai-form"><input value={question} maxLength={500} placeholder={placeholder || config.placeholder || "¿Qué querés saber?"} onChange={(event) => setQuestion(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") askTracked(); }} /><button type="button" disabled={!question.trim() || loading} onClick={askTracked} aria-label={heading ? "Enviar pregunta" : undefined}>{heading ? (loading ? "..." : "➤") : (loading ? "Consultando..." : "Preguntar")}</button></div>{suggestedQuestions.length > 0 && !result && <div className="sat-ai-suggestions"><small>Preguntas sugeridas:</small><div>{suggestedQuestions.map(item => <button type="button" key={item} onClick={() => setQuestion(item)}>{item}</button>)}</div></div>}{result && <div className="sat-ai-result" role="status">{renderTextWithLinks(result.error || result.answer || "")}<button type="button" className="sat-ai-new" onClick={() => { setQuestion(""); setResult(null); }}>Nueva consulta</button></div>}</section>;
 }

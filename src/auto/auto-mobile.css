@@ -1,0 +1,5 @@
+@media (max-width: 760px) {
+  .auto-hero-copy::before {
+    background-position: left bottom;
+  }
+}
