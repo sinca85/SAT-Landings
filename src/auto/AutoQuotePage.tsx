@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowLeft, ArrowRight, CarFront, Check, CheckCircle2, ChevronDown, CircleHelp, Clock3, LockKeyhole, MessageCircle, PenLine, ShieldCheck } from "lucide-react";
 import { SatAIWidget } from "../SatAIWidget";
+import { SiteFooter } from "../SiteFooter";
 import { AutoAnalytics, trackAutoEvent } from "./AutoAnalytics";
 import { autoRequest, useAutoCatalog, type AutoConfig, type AutoQuote, type Option } from "./auto-api";
 import "./auto.css";
@@ -87,5 +88,6 @@ export default function AutoQuotePage() {
       <HelpAndFaqs faqs={faqs} />
       <section className="auto-bottom-promises"><span><CarFront /><b>Analizamos las mejores opciones para tu vehículo</b></span><span><Clock3 /><b>Cotizá en pocos minutos y sin compromiso</b></span><span><MessageCircle /><b>Asesoramiento gratuito por WhatsApp</b></span><span><ShieldCheck /><b>Todo el respaldo de un bróker de seguros</b></span></section>
     </main>
+    <SiteFooter />
   </div>;
 }
