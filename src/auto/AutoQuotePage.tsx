@@ -31,7 +31,7 @@ function HelpAndFaqs({ faqs }: { faqs: Faq[] }) {
   const [showAll, setShowAll] = useState(false);
   const shown = showAll ? faqs : faqs.slice(0, 6);
   return <section className="auto-help-grid">
-    <SatAIWidget slug="galeno-auto" className="auto-ai" heading="¿Tenés alguna consulta?" subtitle="Preguntale al Asistente de Seguro a Tiempo." placeholder="Escribí tu pregunta..." suggestedQuestions={["¿Qué cobertura necesita mi auto?", "¿Qué significa franquicia?", "¿Me cubre si viajo a Uruguay?", "¿Qué pasa si me roban una rueda?"]} />
+    <SatAIWidget slug="galeno-auto" className="auto-ai" heading="¿Tenés alguna consulta?" subtitle="Preguntale al Asistente de Seguro a Tiempo." placeholder="Escribí tu pregunta..." suggestedQuestions={["¿Qué significa franquicia?", "¿Me cubre si viajo a Uruguay?", "¿Qué pasa si me roban una rueda?"]} />
     <div className="auto-faqs"><header><span><CircleHelp size={20} /></span><h2>Preguntas comunes</h2>{faqs.length > 6 && <button type="button" onClick={() => setShowAll(value => !value)}>{showAll ? "Ver menos" : "Ver todas"} <ArrowRight size={15} /></button>}</header><div>{shown.map(faq => <details key={faq._id || faq.question}><summary>{faq.question}<ChevronDown size={16} /></summary><p>{faq.answer}</p></details>)}</div></div>
   </section>;
 }
