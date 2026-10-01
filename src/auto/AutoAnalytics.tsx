@@ -6,7 +6,7 @@ type AutoWindow = Window & { dataLayer?: unknown[]; gtag?: (...args: unknown[]) 
 const target = window as AutoWindow;
 let enabled = false;
 let configured = "";
-export function trackAutoEvent(name: "auto_vehicle_completed" | "auto_quote_completed") {
+export function trackAutoEvent(name: "auto_vehicle_completed" | "auto_quote_completed" | "auto_coverage_selected" | "auto_issue_requested") {
   if (!enabled) return;
   target.gtag?.("event", name, { campaign: "Galeno Auto", environment: "sandbox" });
   target.fbq?.("trackCustom", name, { campaign: "Galeno Auto", environment: "sandbox" });
