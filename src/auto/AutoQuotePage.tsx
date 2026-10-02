@@ -102,7 +102,7 @@ export default function AutoQuotePage() {
     if (!issue.firstName || !issue.lastName || !/^\d{6,8}$/.test(issue.dni) || !issue.dateOfBirth || issue.address.trim().length < 3 || issue.postalCode.length < 4 || !/^\S+@\S+\.\S+$/.test(issue.email) || issue.phone.replace(/\D/g, "").length < 8 || issue.licensePlate.trim().length < 5 || issue.engineNumber.trim().length < 4 || issue.chassisNumber.trim().length < 6) { setError("Completá todos los datos marcados para continuar."); return; }
     setSubmitting(true); setError("");
     try {
-      await autoRequest("/interest", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ submissionId: interestSubmissionId.current, requestId: quote.requestId, vehicle: quote.vehicle || vehicleSummary, coverageCode: selectedCoverage.code, coverageName: selectedCoverage.name, monthlyPrice: selectedCoverage.firstInstallment, deductible: selectedCoverage.deductible, ...issue }) });
+      await autoRequest("/interest", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ submissionId: interestSubmissionId.current, requestId: quote.requestId, branchCode: quote.branchCode, installationId: quote.installationId, vehicle: quote.vehicle || vehicleSummary, coverageCode: selectedCoverage.code, coverageName: selectedCoverage.name, monthlyPrice: selectedCoverage.firstInstallment, deductible: selectedCoverage.deductible, ...issue }) });
       setInterestSent(true); setStep(6); trackAutoEvent("auto_issue_requested");
     } catch (err) { setError(err instanceof Error ? err.message : "No pudimos enviar tu solicitud. Intentá nuevamente."); }
     finally { setSubmitting(false); }
