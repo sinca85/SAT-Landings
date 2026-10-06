@@ -6,10 +6,11 @@ type AutoWindow = Window & { dataLayer?: unknown[]; gtag?: (...args: unknown[]) 
 const target = window as AutoWindow;
 let enabled = false;
 let configured = "";
-export function trackAutoEvent(name: "auto_vehicle_completed" | "auto_quote_completed" | "auto_coverage_selected" | "auto_issue_requested") {
+export function trackAutoEvent(name: "auto_vehicle_completed" | "auto_contact_completed" | "auto_quote_completed" | "auto_coverage_selected" | "auto_whatsapp_clicked" | "auto_issue_requested", parameters: Record<string, string | number | boolean> = {}) {
   if (!enabled) return;
-  target.gtag?.("event", name, { campaign: "Galeno Auto", environment: "sandbox" });
-  target.fbq?.("trackCustom", name, { campaign: "Galeno Auto", environment: "sandbox" });
+  const payload = { campaign: "Galeno Auto", product: "auto", insurer: "galeno", ...parameters };
+  target.gtag?.("event", name, payload);
+  target.fbq?.("trackCustom", name, payload);
 }
 export function AutoAnalytics({ config }: { config: AutoConfig["analytics"] }) {
   useEffect(() => {
