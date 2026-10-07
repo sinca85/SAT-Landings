@@ -1,5 +1,12 @@
 @media (max-width: 760px) {
   .auto-hero-copy::before {
     background-position: left bottom;
+    background-size: auto 100%;
+  }
+
+  .auto-hero-copy::after {
+    background:
+      linear-gradient(to bottom, transparent 68%, rgba(245, 251, 255, 0.96) 96%, rgb(245, 251, 255) 100%),
+      linear-gradient(90deg, rgba(245, 251, 255, 0.99) 0%, rgba(245, 251, 255, 0.91) 52%, rgba(245, 251, 255, 0.08) 100%);
   }
 }
