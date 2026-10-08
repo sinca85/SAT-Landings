@@ -54,12 +54,16 @@ function QuoteLoading() {
   </div>;
 }
 
-function HelpAndFaqs({ faqs }: { faqs: Faq[] }) {
+function HelpAndFaqs({ faqs, whatsappUrl }: { faqs: Faq[]; whatsappUrl: string }) {
   const [showAll, setShowAll] = useState(false);
   const shown = showAll ? faqs : faqs.slice(0, 6);
-  return <section className="auto-help-grid">
-    <SatAIWidget slug="galeno-auto" className="auto-ai" heading="¿Tenés alguna consulta?" subtitle="Preguntale al Asistente de Seguro a Tiempo." placeholder="Escribí tu pregunta..." suggestedQuestions={["¿Qué significa franquicia?", "¿Me cubre si viajo a Uruguay?", "¿Qué pasa si me roban una rueda?"]} />
-    <div className="auto-faqs"><header><span><CircleHelp size={20} /></span><h2>Preguntas comunes</h2>{faqs.length > 6 && <button type="button" onClick={() => setShowAll(value => !value)}>{showAll ? "Ver menos" : "Ver todas"} <ArrowRight size={15} /></button>}</header><div>{shown.map(faq => <details key={faq._id || faq.question}><summary>{faq.question}<ChevronDown size={16} /></summary><p>{faq.answer}</p></details>)}</div></div>
+  return <section className="auto-help-section" aria-label="Información y preguntas frecuentes sobre el seguro de auto">
+    <header className="auto-help-heading"><p>Información para decidir</p><h2>Todo lo que tenés que saber sobre tu seguro</h2><span>Respondemos las dudas más comunes para que tengas toda la información en un solo lugar.</span></header>
+    <div className="auto-help-grid">
+      <SatAIWidget slug="galeno-auto" className="auto-ai" heading="¿Tenés alguna consulta?" subtitle="Preguntale al Asistente de Seguro a Tiempo." placeholder="Escribí tu pregunta..." suggestedQuestions={["¿Qué significa franquicia?", "¿Me cubre si viajo a Uruguay?", "¿Qué pasa si me roban una rueda?"]} />
+      <div className="auto-faqs"><header><span><CircleHelp size={20} /></span><h2>Preguntas comunes</h2>{faqs.length > 6 && <button type="button" onClick={() => setShowAll(value => !value)}>{showAll ? "Ver menos" : "Ver todas"} <ArrowRight size={15} /></button>}</header><div>{shown.map(faq => <details key={faq._id || faq.question}><summary>{faq.question}<ChevronDown size={16} /></summary><p>{faq.answer}</p></details>)}</div></div>
+    </div>
+    <div className="auto-help-contact"><div><strong>¿No encontraste lo que buscabas?</strong><span>Hablá con un asesor y te ayudamos.</span></div><a href={whatsappUrl || "#"} target="_blank" rel="noreferrer" className="button button-primary">Hablar por WhatsApp <ArrowRight size={18} /></a></div>
   </section>;
 }
 
@@ -135,7 +139,7 @@ export default function AutoQuotePage() {
         {step === 3 && quote && <div className="auto-results-view"><div className="auto-results-heading"><small>PASO 3 DE 3</small><h1>Estas son las opciones que seleccionamos para tu auto</h1><p>Analizamos las coberturas disponibles para tu vehículo y elegimos alternativas con distintos niveles de protección.</p></div><div className="auto-vehicle-strip"><span className="auto-vehicle-thumb" /><div className="auto-vehicle-data"><strong>{quote.vehicle || vehicleSummary}</strong>{quote.insuredAmount && <b>Valor asegurado: {money(quote.insuredAmount)}</b>}</div><button type="button" onClick={() => { setQuote(null); setStep(2); }}>Modificar datos <PenLine size={16} /></button></div>{selectedOptions.length ? <div className="auto-results">{selectedOptions.map(({ item, level }) => <CoverageCard key={`${item.code}-${level}`} item={item} level={level} selected={(highlightedCoverageCode || selectedOptions[0]?.item.code) === item.code} onHighlight={() => setHighlightedCoverageCode(item.code)} onSelect={() => void chooseCoverage(item)} />)}</div> : <div className="auto-no-results"><Search size={38} /><h2>No encontramos opciones disponibles</h2><p>Contactanos y vemos tu caso.</p><a className="button button-primary" href={config?.whatsappUrl || "#"} target="_blank" rel="noreferrer"><MessageCircle size={20} /> Hablar por WhatsApp</a></div>}{error && <p className="form-error">{error}</p>}<div className="auto-galeno"><img src="/assets/galeno.png" alt="Galeno Seguros" /><span /><p><b>¿Quién respalda estas coberturas?</b> Las opciones de esta cotización son ofrecidas por <strong>Galeno Seguros</strong> y fueron seleccionadas por <strong>Seguro a Tiempo</strong> según las alternativas disponibles para tu vehículo.</p></div></div>}
         {step === 4 && selectedCoverage && <section className="auto-panel auto-next-choice"><button type="button" className="text-button" onClick={() => setStep(3)}><ArrowLeft size={17} /> Volver a las opciones</button><div className="auto-choice-heading"><CheckCircle2 size={44} /><h1>Elegiste {selectedCoverage.name}</h1><p><strong>{money(selectedCoverage.firstInstallment)}</strong> por mes{selectedCoverage.deductible ? ` · Franquicia: ${selectedCoverage.deductible}` : ""}</p></div><div className="auto-choice-grid"><a className="auto-choice-card" href={selectedWhatsappUrl} target="_blank" rel="noreferrer" onClick={() => trackAutoEvent("auto_whatsapp_clicked", { environment: config?.environment || quote?.environment || "unknown", coverage_code: selectedCoverage.code })}><MessageCircle size={34} /><h2>Continuar por WhatsApp</h2><p>Hablá ahora con un asesor para avanzar con esta cobertura.</p><span>Ir a WhatsApp <ArrowRight size={18} /></span></a></div></section>}
       </div></section>
-      <HelpAndFaqs faqs={faqs} />
+      <HelpAndFaqs faqs={faqs} whatsappUrl={config?.whatsappUrl || "#"} />
       <section className="auto-bottom-promises"><span><CarFront /><b>Analizamos las mejores opciones para tu vehículo</b></span><span><Clock3 /><b>Cotizá en pocos minutos y sin compromiso</b></span><span><MessageCircle /><b>Asesoramiento gratuito por WhatsApp</b></span><span><ShieldCheck /><b>Todo el respaldo de un bróker de seguros</b></span></section>
     </main>
     <SiteFooter />
