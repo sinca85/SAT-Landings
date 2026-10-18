@@ -3,6 +3,11 @@
     padding-top: 0;
   }
 
+  .auto-step-2 .auto-journey-inner,
+  .auto-step-3 .auto-journey-inner {
+    padding-top: 22px;
+  }
+
   .auto-hero-copy::before {
     background-position: left bottom;
     background-size: auto 100%;
