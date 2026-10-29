@@ -38,7 +38,7 @@
 .next-steps-grid{grid-template-columns:1fr auto 1fr auto 1fr}@media(max-width:760px){.next-steps-grid{grid-template-columns:1fr}}
 
 /* Los CTA de WhatsApp siempre usan el color de la marca y nunca se subrayan. */
-.info-contact a[href*="wa.me"],.success-whatsapp>b,.auto-help-contact a[href*="wa.me"],.auto-no-results a[href*="wa.me"],.auto-choice-card[href*="wa.me"]>span,.site-footer__contact-list a[href*="wa.me"],.sat-ai-result a[href*="wa.me"]{color:#fff!important;background:#25d366!important;text-decoration:none!important}
+.info-contact a[href*="wa.me"],.quote-step a[href*="wa.me"],.success-whatsapp>b,.auto-help-contact a[href*="wa.me"],.auto-no-results a[href*="wa.me"],.auto-choice-card[href*="wa.me"]>span,.site-footer__contact-list a[href*="wa.me"],.sat-ai-result a[href*="wa.me"]{color:#fff!important;background:#25d366!important;text-decoration:none!important}
 .info-contact a[href*="wa.me"]:hover,.auto-help-contact a[href*="wa.me"]:hover,.auto-no-results a[href*="wa.me"]:hover,.site-footer__contact-list a[href*="wa.me"]:hover{background:#1da851!important;text-decoration:none!important}
 .auto-choice-card[href*="wa.me"]>span{width:100%;min-height:44px;margin-top:auto;padding:0 16px;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:8px}
 .site-footer__contact-list a[href*="wa.me"]{padding:7px 10px;border-radius:7px;font-weight:700}
