@@ -132,8 +132,9 @@ function ContactStep({ form, setForm, onBack, onSubmit, error, submitting, showV
   </section>;
 }
 
-function QuoteStep({ form, quote, onBack, onContract }: { form: FormState; quote: HomeQuote; onBack: () => void; onContract: () => void }) {
+function QuoteStep({ form, quote, onBack, whatsappUrl }: { form: FormState; quote: HomeQuote; onBack: () => void; whatsappUrl: string }) {
   const firstName = form.name.trim().split(/\s+/)[0] || "";
+  const whatsappMessage = `Hola, soy ${firstName}. Me interesa el seguro de hogar para: ${form.homeType} de ${quote.quotedSquareMeters} m², cotizado a ${formatCurrency(quote.monthlyPrice)} por mes.`;
   const coverage = [
     { icon: Flame, label: "Incendio de estructura", value: formatCurrency(quote.structureCoverage) }, { icon: Home, label: "Incendio del contenido", value: formatCurrency(quote.contentsCoverage) },
     { icon: MonitorSmartphone, label: "Electrodomésticos", value: formatCurrency(quote.appliancesCoverage) }, { icon: Sparkles, label: "Cristales", value: formatCurrency(quote.glassCoverage) },
@@ -142,7 +143,7 @@ function QuoteStep({ form, quote, onBack, onContract }: { form: FormState; quote
   ];
   return <section className="form-step quote-step" aria-labelledby="quote-title">
     <div className="quote-welcome"><span className="success-icon"><Check size={23} strokeWidth={3} /></span><div><h1 id="quote-title">¡Listo, {firstName}!</h1><p>Tenemos una cobertura pensada para tu hogar.</p></div></div>
-    <div className="quote-layout"><div><div className="home-summary">Tu cobertura para <strong>{form.homeType.toLowerCase()} de {quote.quotedSquareMeters} m²</strong></div><div className="price-card"><span>Con el respaldo de</span><div className="insurer-logo"><img src="/assets/allianz.png" alt="Allianz" /></div><small>Tu seguro de hogar</small><div className="price">{formatCurrency(quote.monthlyPrice)} <span>/mes</span></div><strong>12 CUOTAS FIJAS</strong><span>Póliza anual</span><em>Precio vigente por 10 días</em><small className="price-disclaimer">*Precio de referencia, sujeto a ubicación exacta de tu hogar.</small></div><button className="button button-primary full-button" type="button" onClick={onContract}>Quiero contratar <ArrowRight size={19} /></button></div>
+    <div className="quote-layout"><div><div className="home-summary">Tu cobertura para <strong>{form.homeType.toLowerCase()} de {quote.quotedSquareMeters} m²</strong></div><div className="price-card"><span>Con el respaldo de</span><div className="insurer-logo"><img src="/assets/allianz.png" alt="Allianz" /></div><small>Tu seguro de hogar</small><div className="price">{formatCurrency(quote.monthlyPrice)} <span>/mes</span></div><strong>12 CUOTAS FIJAS</strong><span>Póliza anual</span><em>Precio vigente por 10 días</em><small className="price-disclaimer">*Precio de referencia, sujeto a ubicación exacta de tu hogar.</small></div><a className="button button-primary full-button" href={`${whatsappUrl}?text=${encodeURIComponent(whatsappMessage)}`} target="_blank" rel="noreferrer">Hablar con un asesor <ArrowRight size={19} /></a></div>
       <div className="coverage-card"><h2>Tu cobertura</h2>{coverage.map(({ icon: Icon, label, value }, index) => <div className="coverage-row" key={label}><span><Icon size={19} /> {label}</span><strong className={index === coverage.length - 1 ? "included" : ""}>{value}</strong></div>)}</div>
     </div><div className="quote-footer"><button className="text-button" type="button" onClick={onBack}><ArrowLeft size={17} /> Corregir mis datos</button></div>
   </section>;
@@ -258,7 +259,7 @@ function HomeQuotePage() {
   return <div className="page-shell"><SiteHeader /><main className="quote-main"><div className="quote-card">{step <= 3 && <Stepper current={step} />}
     {step === 1 && <HomeStep form={form} setForm={setForm} onContinue={continueToContact} error={error} areaOptions={areaOptions} showValidation={Boolean(validationAttempted[1])} />}
     {step === 2 && <ContactStep form={form} setForm={setForm} onBack={() => { setError(""); setStep(1); }} onSubmit={submitContact} error={error} submitting={submitting} showValidation={Boolean(validationAttempted[2])} />}
-    {step === 3 && quote && <QuoteStep form={form} quote={quote} onBack={() => setStep(2)} onContract={startContract} />}
+    {step === 3 && quote && <QuoteStep form={form} quote={quote} onBack={() => setStep(2)} whatsappUrl={whatsappUrl} />}
     {step === 4 && <ContractStep data={contract} setData={setContract} homeType={form.homeType} floorCategory={form.floor} onBack={() => setStep(3)} onSubmit={submitContract} error={error} submitting={submitting} showValidation={Boolean(validationAttempted[4])} />}
     {step === 5 && quote && <ContractSuccess form={form} contract={contract} quote={quote} whatsappUrl={whatsappUrl} />}
   </div>{step <= 3 && <><InfoIntro /><HomeInformation /><AssistanceBlock /><div className="info-contact"><div><strong>¿No encontraste lo que buscabas?</strong><span>Hablá con un asesor y te ayudamos.</span></div><a href={whatsappUrl} target="_blank" rel="noreferrer" className="button button-primary">Hablar por WhatsApp <ArrowRight size={18} /></a></div></>}</main><SiteFooter /></div>;
